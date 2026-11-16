@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Уроки с дедом · 19 / 40</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #0a0a12; --card: rgba(255,255,255,.045); --card-hover: rgba(255,255,255,.08);
+    --border: rgba(255,255,255,.09); --text: #eef0f8; --muted: #8a8aa0;
+    --neon: #7c5cff; --neon2: #00e5c0; --ok: #2ee6a0; --bad: #ff5c7a; --gold: #ffcc4d;
+  }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; padding: 20px 16px 40px;
+    display: flex; justify-content: center; align-items: flex-start;
+    overflow-x: hidden;
+  }
+  body::before, body::after {
+    content: ''; position: fixed; border-radius: 50%;
+    filter: blur(120px); opacity: .55; z-index: 0; pointer-events: none;
+  }
+  body::before { width: 520px; height: 520px; background: radial-gradient(circle, #7c5cff, transparent 70%); top: -160px; left: -160px; animation: float1 14s ease-in-out infinite; }
+  body::after { width: 560px; height: 560px; background: radial-gradient(circle, #00e5c0, transparent 70%); bottom: -200px; right: -180px; animation: float2 16s ease-in-out infinite; }
+  @keyframes float1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(60px,80px); } }
+  @keyframes float2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-70px,-60px); } }
+
+  .app {
+    position: relative; z-index: 1; width: 100%; max-width: 760px;
+    background: rgba(18,18,31,.72); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+    border: 1px solid var(--border); border-radius: 28px;
+    box-shadow: 0 30px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.06);
+    overflow: hidden;
+  }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid var(--border); background: rgba(255,255,255,.02); }
+  .logo { font-size: 15px; font-weight: 800; letter-spacing: .3px; display: flex; align-items: center; gap: 9px; }
+  .logo .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--neon2); box-shadow: 0 0 12px var(--neon2); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+  .who { font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 999px; background: rgba(124,92,255,.15); border: 1px solid rgba(124,92,255,.3); color: #b8a8ff; }
+
+  .content { padding: 26px 24px 30px; position: relative; }
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeIn .4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  h1 { font-size: 26px; font-weight: 800; line-height: 1.2; margin-bottom: 8px; letter-spacing: -.5px; background: linear-gradient(120deg, #fff, #b8a8ff 60%, #00e5c0); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .sub { font-size: 14px; color: var(--muted); margin-bottom: 26px; line-height: 1.6; }
+  .sub b { color: var(--neon2); }
+
+  .field { margin-bottom: 22px; }
+  .field label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); margin-bottom: 10px; }
+  .field input { width: 100%; font-size: 17px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,.04); color: var(--text); font-family: inherit; outline: none; transition: all .2s; }
+  .field input:focus { border-color: rgba(124,92,255,.6); background: rgba(124,92,255,.08); box-shadow: 0 0 0 4px rgba(124,92,255,.12); }
+
+  .lesson-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; max-height: 400px; overflow-y: auto; padding-right: 4px; }
+  .lesson-card { position: relative; text-align: left; padding: 18px 18px 20px; border: 1px solid var(--border); background: var(--card); border-radius: 18px; cursor: pointer; font-family: inherit; color: var(--text); transition: all .22s cubic-bezier(.4,0,.2,1); overflow: hidden; }
+  .lesson-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(124,92,255,.18), transparent 60%); opacity: 0; transition: opacity .25s; }
+  .lesson-card:hover { transform: translateY(-3px); border-color: rgba(124,92,255,.5); background: var(--card-hover); box-shadow: 0 12px 30px rgba(124,92,255,.18); }
+  .lesson-card:hover::before { opacity: 1; }
+  .lesson-card.selected { border-color: var(--neon); background: rgba(124,92,255,.14); box-shadow: 0 0 0 1px var(--neon), 0 12px 36px rgba(124,92,255,.3); }
+  .lesson-card.done { border-color: rgba(46,230,160,.4); }
+  .lesson-card .n { font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--neon2); margin-bottom: 6px; position: relative; }
+  .lesson-card .t { font-size: 15px; font-weight: 700; line-height: 1.35; position: relative; }
+  .lesson-card .diff { font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-top: 8px; position: relative; color: var(--gold); opacity: .8; }
+  .lesson-card .done-mark { position: absolute; top: 12px; right: 12px; font-size: 14px; color: var(--ok); }
+
+  .btn { font-family: inherit; font-size: 16px; font-weight: 700; padding: 15px 28px; border: none; border-radius: 16px; cursor: pointer; transition: all .18s; letter-spacing: .2px; position: relative; }
+  .btn:active { transform: scale(.97); }
+  .btn-main { width: 100%; background: linear-gradient(135deg, #7c5cff, #00e5c0); color: #0a0a12; box-shadow: 0 10px 32px rgba(124,92,255,.35); }
+  .btn-main:hover { box-shadow: 0 14px 40px rgba(124,92,255,.5); transform: translateY(-1px); }
+  .btn-main:disabled { background: rgba(255,255,255,.08); color: var(--muted); box-shadow: none; cursor: default; transform: none; }
+  .btn-soft { background: rgba(255,255,255,.06); color: var(--text); border: 1px solid var(--border); }
+  .btn-soft:hover { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.2); }
+
+  .lesson-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+  .lesson-top h2 { font-size: 19px; font-weight: 800; letter-spacing: -.3px; }
+  .timer { font-size: 14px; font-weight: 800; letter-spacing: .5px; color: var(--neon2); background: rgba(0,229,192,.1); border: 1px solid rgba(0,229,192,.25); padding: 7px 16px; border-radius: 999px; font-variant-numeric: tabular-nums; box-shadow: 0 0 20px rgba(0,229,192,.15); }
+  .progress { height: 5px; background: rgba(255,255,255,.07); border-radius: 4px; overflow: hidden; margin: 14px 0 22px; }
+  .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #7c5cff, #00e5c0); border-radius: 4px; transition: width .4s cubic-bezier(.4,0,.2,1); box-shadow: 0 0 12px rgba(0,229,192,.6); }
+
+  .teach { background: rgba(124,92,255,.07); border: 1px solid rgba(124,92,255,.2); border-left: 3px solid var(--neon); border-radius: 0 18px 18px 0; padding: 18px 20px; margin-bottom: 18px; font-size: 15px; line-height: 1.75; color: #d8dae8; }
+  .teach b { color: #b8a8ff; }
+  .teach .ex { margin-top: 12px; padding: 12px 16px; background: rgba(0,0,0,.25); border-radius: 12px; border: 1px dashed rgba(255,255,255,.12); font-size: 14px; line-height: 1.7; color: #c8cad8; }
+  .teach .ex .lb { display: block; font-size: 10px; font-weight: 800; color: var(--neon2); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 6px; }
+  .teach ol { margin: 6px 0 0 20px; }
+  .teach li { margin-bottom: 4px; }
+
+  .task { background: rgba(255,255,255,.03); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 16px; transition: all .25s; }
+  .task.ok { border-color: rgba(46,230,160,.5); background: rgba(46,230,160,.06); box-shadow: 0 0 0 1px rgba(46,230,160,.2); }
+  .task.bad { border-color: rgba(255,92,122,.5); background: rgba(255,92,122,.06); box-shadow: 0 0 0 1px rgba(255,92,122,.2); }
+  .task .q { font-size: 17px; line-height: 1.6; margin-bottom: 16px; }
+  .task .q b { color: var(--neon2); }
+
+  .opts { display: flex; flex-direction: column; gap: 9px; }
+  .opt { font-size: 15px; padding: 14px 18px; text-align: left; border: 1px solid var(--border); background: rgba(255,255,255,.03); border-radius: 14px; cursor: pointer; font-family: inherit; color: var(--text); transition: all .18s; }
+  .opt:hover { border-color: rgba(124,92,255,.5); background: rgba(124,92,255,.1); transform: translateX(3px); }
+  .opt.sel { border-color: var(--neon); background: rgba(124,92,255,.16); box-shadow: 0 0 0 1px var(--neon); }
+  .opt.ok { border-color: var(--ok); background: rgba(46,230,160,.14); font-weight: 700; }
+  .opt.bad { border-color: var(--bad); background: rgba(255,92,122,.14); }
+  .opt:disabled { cursor: default; }
+
+  .ans-row { display: flex; gap: 10px; }
+  .ans-row input { font-size: 17px; padding: 13px 16px; width: 170px; border: 1px solid var(--border); border-radius: 14px; background: rgba(255,255,255,.04); color: var(--text); font-family: inherit; outline: none; transition: all .2s; }
+  .ans-row input:focus { border-color: rgba(124,92,255,.6); box-shadow: 0 0 0 4px rgba(124,92,255,.12); }
+
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+
+  .fb { margin-top: 14px; font-size: 14px; line-height: 1.6; display: none; padding: 14px 16px; border-radius: 14px; }
+  .fb.show { display: block; animation: fadeIn .3s ease; }
+  .fb.ok { background: rgba(46,230,160,.1); border: 1px solid rgba(46,230,160,.3); color: #7affc8; }
+  .fb.bad { background: rgba(255,92,122,.1); border: 1px solid rgba(255,92,122,.3); color: #ffa0b0; }
+  .fb .deg { display: block; font-style: italic; color: #b8a8ff; margin-top: 8px; }
+
+  .hint { margin-top: 12px; padding: 12px 16px; background: rgba(255,204,77,.08); border: 1px solid rgba(255,204,77,.25); border-radius: 14px; font-size: 14px; color: #ffe0a0; display: none; line-height: 1.6; }
+  .hint.show { display: block; }
+  .hint b { color: var(--gold); }
+
+  .explain { margin-top: 16px; padding: 16px; background: rgba(0,229,192,.06); border: 1px solid rgba(0,229,192,.25); border-radius: 16px; display: none; }
+  .explain.show { display: block; }
+  .explain label { display: block; font-size: 13px; font-weight: 700; color: var(--neon2); margin-bottom: 10px; }
+  .explain textarea { width: 100%; min-height: 64px; padding: 12px 14px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; background: rgba(0,0,0,.3); color: var(--text); font-family: inherit; font-size: 14px; resize: vertical; outline: none; }
+  .explain textarea:focus { border-color: rgba(0,229,192,.5); }
+
+  .break { text-align: center; padding: 36px 10px; }
+  .break .em { font-size: 64px; margin-bottom: 16px; animation: bounce 2s ease-in-out infinite; }
+  @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+  .break h2 { font-size: 22px; color: var(--neon2); margin-bottom: 12px; }
+  .break p { color: var(--muted); font-size: 15px; line-height: 1.7; margin-bottom: 24px; }
+  .break .num { font-size: 56px; font-weight: 900; letter-spacing: 2px; color: var(--neon2); text-shadow: 0 0 30px rgba(0,229,192,.6); font-variant-numeric: tabular-nums; margin-bottom: 24px; }
+
+  .finish { text-align: center; padding: 24px 10px; }
+  .finish .em { font-size: 72px; margin-bottom: 16px; animation: pop .5s cubic-bezier(.4,0,.2,1); }
+  @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+  .finish .score { font-size: 22px; font-weight: 800; margin-bottom: 8px; background: linear-gradient(120deg, #fff, #b8a8ff); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .finish .verdict { font-size: 16px; font-weight: 700; color: var(--neon2); margin-bottom: 18px; }
+  .finish .quote { max-width: 460px; margin: 0 auto 22px; padding: 16px 18px; background: rgba(124,92,255,.08); border: 1px solid rgba(124,92,255,.2); border-left: 3px solid var(--neon); border-radius: 0 14px 14px 0; font-style: italic; color: #c8cad8; font-size: 14px; text-align: left; line-height: 1.7; }
+  .finish .msg { color: var(--muted); font-size: 14px; line-height: 1.7; margin-bottom: 26px; }
+  .finish .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+  @media (max-width: 480px) {
+    .content { padding: 20px 16px 24px; }
+    h1 { font-size: 22px; }
+    .task .q { font-size: 16px; }
+    .btn { padding: 13px 20px; font-size: 15px; }
+    .lesson-grid { grid-template-columns: 1fr 1fr; }
+    .break .num { font-size: 44px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="logo"><span class="dot"></span>Уроки с дедом · 19 / 40</div>
+    <div class="who" id="topWho">Сеня</div>
+  </div>
+
+  <div class="content">
+
+    <div class="screen active" id="screen-choose">
+      <h1>Тема: Дроби и Уравнения</h1>
+      <p class="sub"><b>19 уроков</b> уже доступны! <br>Урок 20 — в разработке (следите за обновлениями 🐝).<br>Впереди: новая тема (20–30), контрольная, ещё тема (30–39) и итоговый тест (урок 40).</p>
+
+      <div class="field">
+        <label for="nameInput">Имя ученика</label>
+        <input type="text" id="nameInput" value="Сеня" maxlength="20" placeholder="Сеня">
+      </div>
+
+      <div class="field">
+        <label>Выбери урок (1–19)</label>
+        <div class="lesson-grid" id="lessonGrid"></div>
+      </div>
+
+      <button class="btn btn-main" id="goBtn" onclick="startChosen()" disabled>Начать урок →</button>
+    </div>
+
+    <div class="screen" id="screen-lesson">
+      <div class="lesson-top">
+        <h2 id="lessonTitle">Урок</h2>
+        <div class="timer" id="timer">45:00</div>
+      </div>
+      <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+
+      <div class="teach">
+        <div id="teachText"></div>
+        <div class="ex"><span class="lb">Пример от деда</span><span id="teachEx"></span></div>
+      </div>
+
+      <div id="taskWrap"></div>
+      <div class="fb" id="fb"></div>
+
+      <div class="actions">
+        <button class="btn btn-main" id="checkBtn" onclick="check()" style="width:auto">Попробовать</button>
+        <button class="btn btn-main" id="nextBtn" onclick="nextTask()" style="width:auto;display:none;background:linear-gradient(135deg,#2ee6a0,#00e5c0)">Дальше →</button>
+        <button class="btn btn-soft" id="hintBtn" onclick="showHint()">💡 Намекни (−1 ⭐)</button>
+        <button class="btn btn-soft" onclick="goChoose()">← К выбору</button>
+      </div>
+
+      <div class="hint" id="hintBox"></div>
+
+      <div class="explain" id="explainBox">
+        <label>🧠 Расскажи деду своими словами, как решил:</label>
+        <textarea id="explainInput" placeholder="Сначала я..., потом..."></textarea>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-break">
+      <div class="break">
+        <div class="em">☕</div>
+        <h2>Перерыв 3 минуты</h2>
+        <p>Встань, разомнись, попей воды. Телефон пока не трогаем.</p>
+        <div class="num" id="breakNum">03:00</div>
+        <button class="btn btn-main" onclick="endBreak()" style="width:auto">Я отдохнул, дальше →</button>
+      </div>
+    </div>
+
+    <div class="screen" id="screen-finish">
+      <div class="finish">
+        <div class="em" id="finalEm">🏁</div>
+        <div class="score" id="finalScore"></div>
+        <div class="verdict" id="finalVerdict"></div>
+        <div class="quote" id="finalQuote"></div>
+        <div class="msg" id="finalMsg"></div>
+        <div class="row">
+          <button class="btn btn-main" onclick="goChoose()" style="width:auto">К выбору урока</button>
+          <button class="btn btn-soft" onclick="retryLesson()">Пройти ещё раз</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   ТЕМА: ДРОБИ (10 уроков) + УРАВНЕНИЯ (9 уроков) = 19
+   ═══════════════════════════════════════════════════════════ */
+
+const THEME = {
+  name: 'Дроби и Уравнения',
+  lessons: [
+  {
+    title: 'Что такое дробь',
+    diff: 'легко',
+    teach: 'Дробь — это часть целого. <b>1/2</b> — половина, <b>1/3</b> — треть, <b>1/4</b> — четверть. Верхнее число (числитель) — сколько частей взяли. Нижнее (знаменатель) — на сколько частей разделили. Чем больше знаменатель, тем меньше каждая часть.',
+    ex: 'Шоколадка на 4 части: одна часть — 1/4. На 8 частей: одна часть — 1/8. 1/4 больше 1/8, потому что частей меньше.',
+    tasks: [
+      { type:'choice', topic:'4 класс', q:'Что означает дробь <b>3/5</b>?', options:['Взяли 5 частей из 3','Взяли 3 части из 5','Это 3 целых и 5','Это 5 целых и 3'], correct:'Взяли 3 части из 5', hint:'Верхнее — сколько взяли, нижнее — на сколько разделили.', explain:'3/5 — взяли 3 части из 5.', askExplain:false, ok:'«Правильно!»', bad:'«3/5 — взяли 3 части из 5».' },
+      { type:'choice', topic:'4 класс', q:'Что больше: <b>1/3</b> или <b>1/6</b>?', options:['1/3','1/6','Равны','Нельзя сравнить'], correct:'1/3', hint:'Чем меньше знаменатель, тем больше часть.', explain:'1/3 больше 1/6: частей меньше — куски больше.', askExplain:false, ok:'«Верно!»', bad:'«1/3 больше: делили на 3, а не на 6».' },
+      { type:'choice', topic:'4 класс', q:'Что больше: <b>1/10</b> или <b>1/100</b>?', options:['1/10','1/100','Равны','Нельзя сравнить'], correct:'1/10', hint:'Сравни знаменатели.', explain:'1/10 больше 1/100.', askExplain:false, ok:'«Верно!»', bad:'«1/10 больше: на 10 частей vs на 100».' },
+      { type:'input', topic:'4 класс', q:'В дроби <b>7/9</b> какой числитель?', answer:'7', placeholder:'число', hint:'Числитель — сверху.', explain:'Числитель 7, знаменатель 9.', askExplain:false, ok:'«Верно!»', bad:'«Числитель сверху — 7».' },
+      { type:'input', topic:'4 класс', q:'В дроби <b>5/12</b> какой знаменатель?', answer:'12', placeholder:'число', hint:'Знаменатель — снизу.', explain:'Знаменатель 12.', askExplain:false, ok:'«Верно!»', bad:'«Знаменатель снизу — 12».' },
+      { type:'choice', topic:'4 класс', q:'Какая дробь больше единицы?', options:['3/4','5/5','7/5','1/2'], correct:'7/5', hint:'Если числитель больше знаменателя — дробь больше 1.', explain:'7/5 = 1 целая 2/5 > 1.', askExplain:false, ok:'«Верно!»', bad:'«7/5 больше 1: числитель больше знаменателя».' },
+      { type:'input', topic:'4 класс', q:'Сколько будет <b>1/2</b> от 10?', answer:'5', placeholder:'число', hint:'Раздели 10 на 2.', explain:'10 ÷ 2 = 5.', askExplain:false, ok:'«Верно!»', bad:'«10 ÷ 2 = 5».' },
+      { type:'input', topic:'4 класс', q:'Сколько будет <b>1/4</b> от 20?', answer:'5', placeholder:'число', hint:'Раздели 20 на 4.', explain:'20 ÷ 4 = 5.', askExplain:false, ok:'«Верно!»', bad:'«20 ÷ 4 = 5».' },
+      { type:'input', topic:'4 класс', q:'Сколько будет <b>1/5</b> от 45?', answer:'9', placeholder:'число', hint:'45 ÷ 5.', explain:'45 ÷ 5 = 9.', askExplain:false, ok:'«Верно!»', bad:'«45 ÷ 5 = 9».' },
+      { type:'choice', topic:'4 класс', q:'Дробь <b>8/8</b> — это сколько?', options:['0','1','8','1/8'], correct:'1', hint:'Взяли все части.', explain:'8/8 = 1 целое.', askExplain:false, ok:'«Верно!»', bad:'«8/8 = 1».' },
+      { type:'choice', topic:'4 класс', q:'Какая дробь правильная (меньше 1)?', options:['9/7','5/3','4/9','11/2'], correct:'4/9', hint:'Числитель меньше знаменателя.', explain:'4/9 < 1 — правильная.', askExplain:false, ok:'«Верно!»', bad:'«4/9 — числитель меньше знаменателя».' },
+      { type:'input', topic:'4 класс', q:'Сколько будет <b>2/3</b> от 12?', answer:'8', placeholder:'число', hint:'Сначала 1/3 от 12, потом умножь на 2.', explain:'12 ÷ 3 = 4, 4 × 2 = 8.', askExplain:false, ok:'«Верно!»', bad:'«12 ÷ 3 = 4, × 2 = 8».' },
+      { type:'input', topic:'4 класс', q:'Сколько будет <b>3/4</b> от 16?', answer:'12', placeholder:'число', hint:'16 ÷ 4, потом × 3.', explain:'16 ÷ 4 = 4, 4 × 3 = 12.', askExplain:false, ok:'«Верно!»', bad:'«16 ÷ 4 = 4, × 3 = 12».' },
+      { type:'choice', topic:'4 класс', q:'Что больше: <b>2/5</b> или <b>4/5</b>?', options:['2/5','4/5','Равны','Нельзя'], correct:'4/5', hint:'Знаменатели одинаковые — сравни числители.', explain:'4/5 > 2/5.', askExplain:false, ok:'«Верно!»', bad:'«4/5 > 2/5».' },
+      { type:'choice', topic:'4 класс', q:'Что больше: <b>1/2</b> или <b>3/4</b>?', options:['1/2','3/4','Равны','Нельзя'], correct:'3/4', hint:'Приведи к знаменателю 4: 1/2 = 2/4.', explain:'1/2 = 2/4, 3/4 > 2/4.', askExplain:true, ok:'«Верно!»', bad:'«1/2 = 2/4, значит 3/4 больше».' }
+    ]
+  },
+  {
+    title: 'Сравнение дробей',
+    diff: 'легко',
+    teach: 'Чтобы сравнить дроби: 1) одинаковые знаменатели — сравни числители; 2) одинаковые числители — больше та, где знаменатель меньше; 3) разные — приведи к общему знаменателю.',
+    ex: '2/3 и 3/5 → 10/15 и 9/15 → 2/3 > 3/5.',
+    tasks: [
+      { type:'choice', topic:'5 класс', q:'Что больше: <b>3/7</b> или <b>5/7</b>?', options:['3/7','5/7','Равны','Нельзя'], correct:'5/7', hint:'Знаменатели равны — сравнивай числители.', explain:'5/7 > 3/7.', askExplain:false, ok:'«Верно!»', bad:'«5/7 > 3/7».' },
+      { type:'choice', topic:'5 класс', q:'Что больше: <b>2/9</b> или <b>2/5</b>?', options:['2/9','2/5','Равны','Нельзя'], correct:'2/5', hint:'Одинаковые числители — где знаменатель меньше, та больше.', explain:'2/5 > 2/9: делили на меньше частей.', askExplain:false, ok:'«Верно!»', bad:'«2/5 > 2/9: знаменатель меньше».' },
+      { type:'choice', topic:'5 класс', q:'Что больше: <b>1/2</b> или <b>2/3</b>?', options:['1/2','2/3','Равны','Нельзя'], correct:'2/3', hint:'Общий знаменатель 6.', explain:'1/2 = 3/6, 2/3 = 4/6. 2/3 больше.', askExplain:false, ok:'«Верно!»', bad:'«1/2 = 3/6, 2/3 = 4/6. 2/3 больше».' },
+      { type:'choice', topic:'5 класс', q:'Что меньше: <b>3/4</b> или <b>5/6</b>?', options:['3/4','5/6','Равны','Нельзя'], correct:'3/4', hint:'Общий знаменатель 12.', explain:'3/4 = 9/12, 5/6 = 10/12. 3/4 меньше.', askExplain:false, ok:'«Верно!»', bad:'«3/4 = 9/12, 5/6 = 10/12. 3/4 меньше».' },
+      { type:'input', topic:'5 класс', q:'Приведи <b>1/2</b> к знаменателю 8. Какой числитель?', answer:'4', placeholder:'число', hint:'8 ÷ 2 = 4, умножь числитель на 4.', explain:'1/2 = 4/8.', askExplain:false, ok:'«Верно!»', bad:'«1/2 = 4/8».' },
+      { type:'input', topic:'5 класс', q:'Приведи <b>2/3</b> к знаменателю 12. Какой числитель?', answer:'8', placeholder:'число', hint:'12 ÷ 3 = 4, ×2.', explain:'2/3 = 8/12.', askExplain:false, ok:'«Верно!»', bad:'«2/3 = 8/12».' },
+      { type:'choice', topic:'5 класс', q:'Что больше: <b>5/8</b> или <b>3/5</b>?', options:['5/8','3/5','Равны','Нельзя'], correct:'5/8', hint:'Общий знаменатель 40.', explain:'5/8 = 25/40, 3/5 = 24/40. 5/8 больше.', askExplain:false, ok:'«Верно!»', bad:'«25/40 > 24/40».' },
+      { type:'choice', topic:'5 класс', q:'Что больше: <b>7/10</b> или <b>2/3</b>?', options:['7/10','2/3','Равны','Нельзя'], correct:'7/10', hint:'Общий знаменатель 30.', explain:'7/10 = 21/30, 2/3 = 20/30.', askExplain:false, ok:'«Верно!»', bad:'«21/30 > 20/30».' },
+      { type:'input', topic:'5 класс', q:'Запиши дробь <b>3/4</b> в виде десятичной (через запятую).', answer:'0,75', placeholder:'0,00', hint:'3 ÷ 4.', explain:'3 ÷ 4 = 0,75.', askExplain:false, ok:'«Верно!»', bad:'«3 ÷ 4 = 0,75».' },
+      { type:'input', topic:'5 класс', q:'Запиши <b>1/4</b> десятичной дробью.', answer:'0,25', placeholder:'0,00', hint:'1 ÷ 4.', explain:'1 ÷ 4 = 0,25.', askExplain:false, ok:'«Верно!»', bad:'«1 ÷ 4 = 0,25».' },
+      { type:'choice', topic:'5 класс', q:'Что больше: <b>0,5</b> или <b>1/3</b>?', options:['0,5','1/3','Равны','Нельзя'], correct:'0,5', hint:'1/3 ≈ 0,33.', explain:'0,5 > 0,33.', askExplain:false, ok:'«Верно!»', bad:'«1/3 ≈ 0,33, значит 0,5 больше».' },
+      { type:'choice', topic:'5 класс', q:'Что больше: <b>3/4</b> или <b>0,7</b>?', options:['3/4','0,7','Равны','Нельзя'], correct:'3/4', hint:'3/4 = 0,75.', explain:'0,75 > 0,7.', askExplain:false, ok:'«Верно!»', bad:'«3/4 = 0,75 > 0,7».' },
+      { type:'choice', topic:'5 класс', q:'Что меньше: <b>1/2</b> или <b>0,4</b>?', options:['1/2','0,4','Равны','Нельзя'], correct:'0,4', hint:'1/2 = 0,5.', explain:'0,4 < 0,5.', askExplain:false, ok:'«Верно!»', bad:'«0,4 < 0,5».' },
+      { type:'input', topic:'5 класс', q:'Приведи <b>3/4</b> и <b>5/6</b> к общему знаменателю 12. Запиши сумму числителей.', answer:'19', placeholder:'число', hint:'3/4 = 9/12, 5/6 = 10/12. 9 + 10.', explain:'9 + 10 = 19.', askExplain:false, ok:'«Верно!»', bad:'«9/12 + 10/12, числители 9 и 10, сумма 19».' },
+      { type:'choice', topic:'5 класс', q:'Какая дробь самая большая?', options:['2/3','3/5','5/8','7/12'], correct:'2/3', hint:'Приведи все к 24.', explain:'2/3 = 16/24, 3/5 = 14,4/24, 5/8 = 15/24, 7/12 = 14/24. Самая большая 2/3.', askExplain:true, ok:'«Верно!»', bad:'«2/3 = 16/24 — самая большая».' }
+    ]
+  },
+  {
+    title: 'Сложение с одинаковыми знаменателями',
+    diff: 'легко',
+    teach: 'Если знаменатели одинаковые — складываем только числители, знаменатель оставляем. Результат сокращаем, если можно. <b>2/7 + 3/7 = 5/7</b>.',
+    ex: '1/5 + 2/5 = 3/5. 4/9 + 3/9 = 7/9.',
+    tasks: [
+      { type:'input', topic:'5 класс', q:'<b>1/6 + 2/6</b> = ?', answer:'1/2', placeholder:'дробь', hint:'3/6, сократи на 3.', explain:'3/6 = 1/2.', askExplain:false, ok:'«Верно!»', bad:'«3/6 = 1/2».' },
+      { type:'input', topic:'5 класс', q:'<b>2/9 + 4/9</b> = ?', answer:'2/3', placeholder:'дробь', hint:'6/9, сократи на 3.', explain:'6/9 = 2/3.', askExplain:false, ok:'«Верно!»', bad:'«6/9 = 2/3».' },
+      { type:'input', topic:'5 класс', q:'<b>3/8 + 1/8</b> = ?', answer:'1/2', placeholder:'дробь', hint:'4/8.', explain:'4/8 = 1/2.', askExplain:false, ok:'«Верно!»', bad:'«4/8 = 1/2».' },
+      { type:'input', topic:'5 класс', q:'<b>2/5 + 1/5</b> = ?', answer:'3/5', placeholder:'дробь', hint:'Складывай числители.', explain:'3/5.', askExplain:false, ok:'«Верно!»', bad:'«3/5».' },
+      { type:'input', topic:'5 класс', q:'<b>5/12 + 1/12</b> = ?', answer:'1/2', placeholder:'дробь', hint:'6/12.', explain:'6/12 = 1/2.', askExplain:false, ok:'«Верно!»', bad:'«6/12 = 1/2».' },
+      { type:'input', topic:'5 класс', q:'<b>3/10 + 4/10</b> = ?', answer:'7/10', placeholder:'дробь', hint:'3+4=7.', explain:'7/10.', askExplain:false, ok:'«Верно!»', bad:'«7/10».' },
+      { type:'input', topic:'5 класс', q:'<b>1/4 + 1/4</b> = ?', answer:'1/2', placeholder:'дробь', hint:'2/4.', explain:'2/4 = 1/2.', askExplain:false, ok:'«Верно!»', bad:'«2/4 = 1/2».' },
+      { type:'input', topic:'5 класс', q:'<b>4/15 + 2/15</b> = ?', answer:'2/5', placeholder:'дробь', hint:'6/15, сократи на 3.', explain:'6/15 = 2/5.', askExplain:false, ok:'«Верно!»', bad:'«6/15 = 2/5».' },
+      { type:'input', topic:'5 класс', q:'<b>7/20 + 3/20</b> = ?', answer:'1/2', placeholder:'дробь', hint:'10/20.', explain:'10/20 = 1/2.', askExplain:false, ok:'«Верно!»', bad:'«10/20 = 1/2».' },
+      { type:'input', topic:'5 класс', q:'<b>5/9 + 1/9</b> = ?', answer:'2/3', placeholder:'дробь', hint:'6/9.', explain:'6/9 = 2/3.', askExplain:false, ok:'«Верно!»', bad:'«6/9 = 2/3».' },
+      { type:'input', topic:'5 класс', q:'<b>2/7 + 2/7</b> = ?', answer:'4/7', placeholder:'дробь', hint:'Складывай числители.', explain:'4/7.', askExplain:false, ok:'«Верно!»', bad:'«4/7».' },
+      { type:'input', topic:'5 класс', q:'<b>1/10 + 1/10 + 1/10</b> = ?', answer:'3/10', placeholder:'дробь', hint:'Сложи три раза.', explain:'3/10.', askExplain:false, ok:'«Верно!»', bad:'«3/10».' },
+      { type:'input', topic:'5 класс', q:'<b>3/16 + 5/16</b> = ?', answer:'1/2', placeholder:'дробь', hint:'8/16.', explain:'8/16 = 1/2.', askExplain:false, ok:'«Верно!»', bad:'«8/16 = 1/2».' },
+      { type:'input', topic:'5 класс', q:'<b>4/11 + 7/11</b> = ?', answer:'1', placeholder:'дробь', hint:'11/11.', explain:'11/11 = 1.', askExplain:false, ok:'«Верно!»', bad:'«11/11 = 1».' },
+      { type:'input', topic:'5 класс', q:'<b>5/8 + 3/8</b> = ?', answer:'1', placeholder:'дробь', hint:'8/8.', explain:'8/8 = 1.', askExplain:true, ok:'«Верно!»', bad:'«8/8 = 1».' }
+    ]
+  },
+  {
+    title: 'Вычитание с одинаковыми знаменателями',
+    diff: 'легко',
+    teach: 'Вычитание — как сложение, только вычитаем числители. Знаменатель тот же. <b>5/7 − 2/7 = 3/7</b>. Результат сокращаем.',
+    ex: '4/5 − 1/5 = 3/5. 7/8 − 3/8 = 4/8 = 1/2.',
+    tasks: [
+      { type:'input', topic:'5 класс', q:'<b>5/6 − 1/6</b> = ?', answer:'2/3', placeholder:'дробь', hint:'4/6.', explain:'4/6 = 2/3.', askExplain:false, ok:'«Верно!»', bad:'«4/6 = 2/3».' },
+      { type:'input', topic:'5 класс', q:'<b>7/9 − 4/9</b> = ?', answer:'1/3', placeholder:'дробь', hint:'3/9.', explain:'3/9 = 1/3.', askExplain:false, ok:'«Верно!»', bad:'«3/9 = 1/3».' },
+      { type:'input', topic:'5 класс', q:'<b>3/4 − 1/4</b> = ?', answer:'1/2', placeholder:'дробь', hint:'2/4.', explain:'2/4 = 1/2.', askExplain:false, ok:'«Верно!»', bad:'«2/4 = 1/2».' },
+      { type:'input', topic:'5 класс', q:'<b>9/10 − 3/10</b> = ?', answer:'3/5', placeholder:'дробь', hint:'6/10.', explain:'6/10 = 3/5.', askExplain:false, ok:'«Верно!»', bad:'«6/10 = 3/5».' },
+      { type:'input', topic:'5 класс', q:'<b>8/12 − 2/12</b> = ?', answer:'1/2', placeholder:'дробь', hint:'6/12.', explain:'6/12 = 1/2.', askExplain:false, ok:'«Верно!»', bad:'«6/12 = 1/2».' },
+      { type:'input', topic:'5 класс', q:'<b>5/8 − 3/8</b> = ?', answer:'1/4', placeholder:'дробь', hint:'2/8.', explain:'2/8 = 1/4.', askExplain:false, ok:'«Верно!»', bad:'«2/8 = 1/4».' },
+      { type:'input', topic:'5 класс', q:'<b>11/15 − 6/15</b> = ?', answer:'1/3', placeholder:'дробь', hint:'5/15.', explain:'5/15 = 1/3.', askExplain:false, ok:'«Верно!»', bad:'«5/15 = 1/3».' },
+      { type:'input', topic:'5 класс', q:'<b>7/10 − 1/10</b> = ?', answer:'3/5', placeholder:'дробь', hint:'6/10.', explain:'6/10 = 3/5.', askExplain:false, ok:'«Верно!»', bad:'«6/10 = 3/5».' },
+      { type:'input', topic:'5 класс', q:'<b>1 − 1/3</b> = ?', answer:'2/3', placeholder:'дробь', hint:'1 = 3/3.', explain:'3/3 − 1/3 = 2/3.', askExplain:false, ok:'«Верно!»', bad:'«1 = 3/3, 3/3 − 1/3 = 2/3».' },
+      { type:'input', topic:'5 класс', q:'<b>1 − 2/5</b> = ?', answer:'3/5', placeholder:'дробь', hint:'1 = 5/5.', explain:'5/5 − 2/5 = 3/5.', askExplain:false, ok:'«Верно!»', bad:'«5/5 − 2/5 = 3/5».' },
+      { type:'input', topic:'5 класс', q:'<b>1 − 7/9</b> = ?', answer:'2/9', placeholder:'дробь', hint:'1 = 9/9.', explain:'9/9 − 7/9 = 2/9.', askExplain:false, ok:'«Верно!»', bad:'«9/9 − 7/9 = 2/9».' },
+      { type:'input', topic:'5 класс', q:'<b>9/11 − 4/11</b> = ?', answer:'5/11', placeholder:'дробь', hint:'Вычитай числители.', explain:'5/11.', askExplain:false, ok:'«Верно!»', bad:'«5/11».' },
+      { type:'input', topic:'5 класс', q:'<b>13/20 − 7/20</b> = ?', answer:'3/10', placeholder:'дробь', hint:'6/20.', explain:'6/20 = 3/10.', askExplain:false, ok:'«Верно!»', bad:'«6/20 = 3/10».' },
+      { type:'input', topic:'5 класс', q:'<b>5/6 − 2/6</b> = ?', answer:'1/2', placeholder:'дробь', hint:'3/6.', explain:'3/6 = 1/2.', askExplain:false, ok:'«Верно!»', bad:'«3/6 = 1/2».' },
+      { type:'input', topic:'5 класс', q:'<b>1 − 1/8</b> = ?', answer:'7/8', placeholder:'дробь', hint:'1 = 8/8.', explain:'8/8 − 1/8 = 7/8.', askExplain:true, ok:'«Верно!»', bad:'«8/8 − 1/8 = 7/8».' }
+    ]
+  },
+  {
+    title: 'Сложение с разными знаменателями',
+    diff: 'средне',
+    teach: 'Приводим к общему знаменателю. Находим число, которое делится на оба знаменателя. Умножаем верх и низ каждой дроби. Потом складываем числители.',
+    ex: '2/3 + 1/6: общий 6. 2/3 = 4/6. 4/6 + 1/6 = 5/6.',
+    tasks: [
+      { type:'input', topic:'5–6 класс', q:'<b>1/2 + 1/3</b> = ?', answer:'5/6', placeholder:'дробь', hint:'Общий знаменатель 6.', explain:'3/6 + 2/6 = 5/6.', askExplain:false, ok:'«Верно!»', bad:'«3/6 + 2/6 = 5/6».' },
+      { type:'input', topic:'5–6 класс', q:'<b>1/3 + 1/4</b> = ?', answer:'7/12', placeholder:'дробь', hint:'Общий 12.', explain:'4/12 + 3/12 = 7/12.', askExplain:false, ok:'«Верно!»', bad:'«4/12 + 3/12 = 7/12».' },
+      { type:'input', topic:'5–6 класс', q:'<b>2/5 + 1/3</b> = ?', answer:'11/15', placeholder:'дробь', hint:'Общий 15.', explain:'6/15 + 5/15 = 11/15.', askExplain:false, ok:'«Верно!»', bad:'«6/15 + 5/15 = 11/15».' },
+      { type:'input', topic:'5–6 класс', q:'<b>1/2 + 1/4</b> = ?', answer:'3/4', placeholder:'дробь', hint:'Общий 4.', explain:'2/4 + 1/4 = 3/4.', askExplain:false, ok:'«Верно!»', bad:'«2/4 + 1/4 = 3/4».' },
+      { type:'input', topic:'5–6 класс', q:'<b>3/4 + 1/6</b> = ?', answer:'11/12', placeholder:'дробь', hint:'Общий 12.', explain:'9/12 + 2/12 = 11/12.', askExplain:false, ok:'«Верно!»', bad:'«9/12 + 2/12 = 11/12».' },
+      { type:'input', topic:'5–6 класс', q:'<b>1/5 + 1/2</b> = ?', answer:'7/10', placeholder:'дробь', hint:'Общий 10.', explain:'2/10 + 5/10 = 7/10.', askExplain:false, ok:'«Верно!»', bad:'«2/10 + 5/10 = 7/10».' },
+      { type:'input', topic:'5–6 класс', q:'<b>2/7 + 1/2</b> = ?', answer:'11/14', placeholder:'дробь', hint:'Общий 14.', explain:'4/14 + 7/14 = 11/14.', askExplain:false, ok:'«Верно!»', bad:'«4/14 + 7/14 = 11/14».' },
+      { type:'input', topic:'5–6 класс', q:'<b>3/5 + 1/4</b> = ?', answer:'17/20', placeholder:'дробь', hint:'Общий 20.', explain:'12/20 + 5/20 = 17/20.', askExplain:false, ok:'«Верно!»', bad:'«12/20 + 5/20 = 17/20».' },
+      { type:'input', topic:'5–6 класс', q:'<b>1/3 + 1/6</b> = ?', answer:'1/2', placeholder:'дробь', hint:'Общий 6.', explain:'2/6 + 1/6 = 3/6 = 1/2.', askExplain:false, ok:'«Верно!»', bad:'«2/6 + 1/6 = 3/6 = 1/2».' },
+      { type:'input', topic:'5–6 класс', q:'<b>2/3 + 1/4</b> = ?', answer:'11/12', placeholder:'дробь', hint:'Общий 12.', explain:'8/12 + 3/12 = 11/12.', askExplain:false, ok:'«Верно!»', bad:'«8/12 + 3/12 = 11/12».' },
+      { type:'input', topic:'5–6 класс', q:'<b>1/2 + 1/6</b> = ?', answer:'2/3', placeholder:'дробь', hint:'Общий 6.', explain:'3/6 + 1/6 = 4/6 = 2/3.', askExplain:false, ok:'«Верно!»', bad:'«3/6 + 1/6 = 4/6 = 2/3».' },
+      { type:'input', topic:'5–6 класс', q:'<b>3/8 + 1/4</b> = ?', answer:'5/8', placeholder:'дробь', hint:'1/4 = 2/8.', explain:'3/8 + 2/8 = 5/8.', askExplain:false, ok:'«Верно!»', bad:'«3/8 + 2/8 = 5/8».' },
+      { type:'input', topic:'5–6 класс', q:'<b>5/6 + 1/3</b> = ?', answer:'7/6', placeholder:'дробь', hint:'1/3 = 2/6.', explain:'5/6 + 2/6 = 7/6 = 1 целая 1/6.', askExplain:false, ok:'«Верно!»', bad:'«5/6 + 2/6 = 7/6».' },
+      { type:'input', topic:'5–6 класс', q:'<b>1/4 + 3/8</b> = ?', answer:'5/8', placeholder:'дробь', hint:'1/4 = 2/8.', explain:'2/8 + 3/8 = 5/8.', askExplain:false, ok:'«Верно!»', bad:'«2/8 + 3/8 = 5/8».' },
+      { type:'input', topic:'5–6 класс', q:'<b>2/9 + 1/3</b> = ?', answer:'5/9', placeholder:'дробь', hint:'1/3 = 3/9.', explain:'2/9 + 3/9 = 5/9.', askExplain:true, ok:'«Верно!»', bad:'«2/9 + 3/9 = 5/9».' }
+    ]
+  },
+  {
+    title: 'Вычитание с разными знаменателями',
+    diff: 'средне',
+    teach: 'Приводим к общему знаменателю, вычитаем числители. Если первая дробь меньше второй — занимаем единицу. <b>1/2 − 1/3 = 3/6 − 2/6 = 1/6</b>.',
+    ex: '3/4 − 1/2 = 3/4 − 2/4 = 1/4.',
+    tasks: [
+      { type:'input', topic:'5–6 класс', q:'<b>1/2 − 1/3</b> = ?', answer:'1/6', placeholder:'дробь', hint:'Общий 6.', explain:'3/6 − 2/6 = 1/6.', askExplain:false, ok:'«Верно!»', bad:'«3/6 − 2/6 = 1/6».' },
+      { type:'input', topic:'5–6 класс', q:'<b>3/4 − 1/2</b> = ?', answer:'1/4', placeholder:'дробь', hint:'1/2 = 2/4.', explain:'3/4 − 2/4 = 1/4.', askExplain:false, ok:'«Верно!»', bad:'«3/4 − 2/4 = 1/4».' },
+      { type:'input', topic:'5–6 класс', q:'<b>5/6 − 1/2</b> = ?', answer:'1/3', placeholder:'дробь', hint:'1/2 = 3/6.', explain:'5/6 − 3/6 = 2/6 = 1/3.', askExplain:false, ok:'«Верно!»', bad:'«5/6 − 3/6 = 2/6 = 1/3».' },
+      { type:'input', topic:'5–6 класс', q:'<b>2/3 − 1/4</b> = ?', answer:'5/12', placeholder:'дробь', hint:'Общий 12.', explain:'8/12 − 3/12 = 5/12.', askExplain:false, ok:'«Верно!»', bad:'«8/12 − 3/12 = 5/12».' },
+      { type:'input', topic:'5–6 класс', q:'<b>7/10 − 1/5</b> = ?', answer:'1/2', placeholder:'дробь', hint:'1/5 = 2/10.', explain:'7/10 − 2/10 = 5/10 = 1/2.', askExplain:false, ok:'«Верно!»', bad:'«7/10 − 2/10 = 5/10 = 1/2».' },
+      { type:'input', topic:'5–6 класс', q:'<b>3/5 − 1/3</b> = ?', answer:'4/15', placeholder:'дробь', hint:'Общий 15.', explain:'9/15 − 5/15 = 4/15.', askExplain:false, ok:'«Верно!»', bad:'«9/15 − 5/15 = 4/15».' },
+      { type:'input', topic:'5–6 класс', q:'<b>5/8 − 1/4</b> = ?', answer:'3/8', placeholder:'дробь', hint:'1/4 = 2/8.', explain:'5/8 − 2/8 = 3/8.', askExplain:false, ok:'«Верно!»', bad:'«5/8 − 2/8 = 3/8».' },
+      { type:'input', topic:'5–6 класс', q:'<b>2/3 − 1/6</b> = ?', answer:'1/2', placeholder:'дробь', hint:'2/3 = 4/6.', explain:'4/6 − 1/6 = 3/6 = 1/2.', askExplain:false, ok:'«Верно!»', bad:'«4/6 − 1/6 = 3/6 = 1/2».' },
+      { type:'input', topic:'5–6 класс', q:'<b>1 − 3/7</b> = ?', answer:'4/7', placeholder:'дробь', hint:'1 = 7/7.', explain:'7/7 − 3/7 = 4/7.', askExplain:false, ok:'«Верно!»', bad:'«7/7 − 3/7 = 4/7».' },
+      { type:'input', topic:'5–6 класс', q:'<b>1 − 2/3</b> = ?', answer:'1/3', placeholder:'дробь', hint:'1 = 3/3.', explain:'3/3 − 2/3 = 1/3.', askExplain:false, ok:'«Верно!»', bad:'«3/3 − 2/3 = 1/3».' },
+      { type:'input', topic:'5–6 класс', q:'<b>4/5 − 1/2</b> = ?', answer:'3/10', placeholder:'дробь', hint:'Общий 10.', explain:'8/10 − 5/10 = 3/10.', askExplain:false, ok:'«Верно!»', bad:'«8/10 − 5/10 = 3/10».' },
+      { type:'input', topic:'5–6 класс', q:'<b>7/8 − 1/2</b> = ?', answer:'3/8', placeholder:'дробь', hint:'1/2 = 4/8.', explain:'7/8 − 4/8 = 3/8.', askExplain:false, ok:'«Верно!»', bad:'«7/8 − 4/8 = 3/8».' },
+      { type:'input', topic:'5–6 класс', q:'<b>5/6 − 1/3</b> = ?', answer:'1/2', placeholder:'дробь', hint:'1/3 = 2/6.', explain:'5/6 − 2/6 = 3/6 = 1/2.', askExplain:false, ok:'«Верно!»', bad:'«5/6 − 2/6 = 3/6 = 1/2».' },
+      { type:'input', topic:'5–6 класс', q:'<b>3/4 − 2/3</b> = ?', answer:'1/12', placeholder:'дробь', hint:'Общий 12.', explain:'9/12 − 8/12 = 1/12.', askExplain:false, ok:'«Верно!»', bad:'«9/12 − 8/12 = 1/12».' },
+      { type:'input', topic:'5–6 класс', q:'<b>1 − 5/8</b> = ?', answer:'3/8', placeholder:'дробь', hint:'1 = 8/8.', explain:'8/8 − 5/8 = 3/8.', askExplain:true, ok:'«Верно!»', bad:'«8/8 − 5/8 = 3/8».' }
+    ]
+  },
+  {
+    title: 'Умножение дробей',
+    diff: 'средне',
+    teach: 'Умножение — верх на верх, низ на низ. Потом сокращаем. <b>2/3 × 3/4 = 6/12 = 1/2</b>. Можно сокращать до умножения — крест-накрест.',
+    ex: '1/2 × 2/3 = 2/6 = 1/3.',
+    tasks: [
+      { type:'input', topic:'6 класс', q:'<b>1/2 × 1/3</b> = ?', answer:'1/6', placeholder:'дробь', hint:'1×1 сверху, 2×3 снизу.', explain:'1/6.', askExplain:false, ok:'«Верно!»', bad:'«1/6».' },
+      { type:'input', topic:'6 класс', q:'<b>2/3 × 3/4</b> = ?', answer:'1/2', placeholder:'дробь', hint:'6/12.', explain:'6/12 = 1/2.', askExplain:false, ok:'«Верно!»', bad:'«6/12 = 1/2».' },
+      { type:'input', topic:'6 класс', q:'<b>3/5 × 5/6</b> = ?', answer:'1/2', placeholder:'дробь', hint:'15/30.', explain:'15/30 = 1/2.', askExplain:false, ok:'«Верно!»', bad:'«15/30 = 1/2».' },
+      { type:'input', topic:'6 класс', q:'<b>2/7 × 7/8</b> = ?', answer:'1/4', placeholder:'дробь', hint:'14/56.', explain:'14/56 = 1/4.', askExplain:false, ok:'«Верно!»', bad:'«14/56 = 1/4».' },
+      { type:'input', topic:'6 класс', q:'<b>1/4 × 8/9</b> = ?', answer:'2/9', placeholder:'дробь', hint:'8/36.', explain:'8/36 = 2/9.', askExplain:false, ok:'«Верно!»', bad:'«8/36 = 2/9».' },
+      { type:'input', topic:'6 класс', q:'<b>3/4 × 8/9</b> = ?', answer:'2/3', placeholder:'дробь', hint:'24/36.', explain:'24/36 = 2/3.', askExplain:false, ok:'«Верно!»', bad:'«24/36 = 2/3».' },
+      { type:'input', topic:'6 класс', q:'<b>5/6 × 9/10</b> = ?', answer:'3/4', placeholder:'дробь', hint:'45/60.', explain:'45/60 = 3/4.', askExplain:false, ok:'«Верно!»', bad:'«45/60 = 3/4».' },
+      { type:'input', topic:'6 класс', q:'<b>2/5 × 5/8</b> = ?', answer:'1/4', placeholder:'дробь', hint:'10/40.', explain:'10/40 = 1/4.', askExplain:false, ok:'«Верно!»', bad:'«10/40 = 1/4».' },
+      { type:'input', topic:'6 класс', q:'<b>3/7 × 14/15</b> = ?', answer:'2/5', placeholder:'дробь', hint:'42/105.', explain:'42/105 = 2/5.', askExplain:false, ok:'«Верно!»', bad:'«42/105 = 2/5».' },
+      { type:'input', topic:'6 класс', q:'<b>4/9 × 3/8</b> = ?', answer:'1/6', placeholder:'дробь', hint:'12/72.', explain:'12/72 = 1/6.', askExplain:false, ok:'«Верно!»', bad:'«12/72 = 1/6».' },
+      { type:'input', topic:'6 класс', q:'<b>5/7 × 7/10</b> = ?', answer:'1/2', placeholder:'дробь', hint:'35/70.', explain:'35/70 = 1/2.', askExplain:false, ok:'«Верно!»', bad:'«35/70 = 1/2».' },
+      { type:'input', topic:'6 класс', q:'<b>2/3 × 9/10</b> = ?', answer:'3/5', placeholder:'дробь', hint:'18/30.', explain:'18/30 = 3/5.', askExplain:false, ok:'«Верно!»', bad:'«18/30 = 3/5».' },
+      { type:'input', topic:'6 класс', q:'<b>1/6 × 18/25</b> = ?', answer:'3/25', placeholder:'дробь', hint:'18/150.', explain:'18/150 = 3/25.', askExplain:false, ok:'«Верно!»', bad:'«18/150 = 3/25».' },
+      { type:'input', topic:'6 класс', q:'<b>3/8 × 4/9</b> = ?', answer:'1/6', placeholder:'дробь', hint:'12/72.', explain:'12/72 = 1/6.', askExplain:false, ok:'«Верно!»', bad:'«12/72 = 1/6».' },
+      { type:'input', topic:'6 класс', q:'<b>7/12 × 6/7</b> = ?', answer:'1/2', placeholder:'дробь', hint:'42/84.', explain:'42/84 = 1/2.', askExplain:true, ok:'«Верно!»', bad:'«42/84 = 1/2».' }
+    ]
+  },
+  {
+    title: 'Деление дробей',
+    diff: 'сложно',
+    teach: 'Деление — переверни вторую дробь и умножь. <b>2/3 ÷ 4/5 = 2/3 × 5/4 = 10/12 = 5/6</b>. Главное — не забыть перевернуть.',
+    ex: '1/2 ÷ 1/4 = 1/2 × 4/1 = 2.',
+    tasks: [
+      { type:'input', topic:'6 класс', q:'<b>1/2 ÷ 1/3</b> = ?', answer:'3/2', placeholder:'дробь', hint:'1/2 × 3/1.', explain:'1/2 × 3/1 = 3/2.', askExplain:false, ok:'«Верно!»', bad:'«1/2 × 3/1 = 3/2».' },
+      { type:'input', topic:'6 класс', q:'<b>2/3 ÷ 4/5</b> = ?', answer:'5/6', placeholder:'дробь', hint:'2/3 × 5/4.', explain:'10/12 = 5/6.', askExplain:false, ok:'«Верно!»', bad:'«10/12 = 5/6».' },
+      { type:'input', topic:'6 класс', q:'<b>3/4 ÷ 2/5</b> = ?', answer:'15/8', placeholder:'дробь', hint:'3/4 × 5/2.', explain:'15/8.', askExplain:false, ok:'«Верно!»', bad:'«15/8».' },
+      { type:'input', topic:'6 класс', q:'<b>1/2 ÷ 2</b> = ?', answer:'1/4', placeholder:'дробь', hint:'2 = 2/1.', explain:'1/2 × 1/2 = 1/4.', askExplain:false, ok:'«Верно!»', bad:'«1/2 × 1/2 = 1/4».' },
+      { type:'input', topic:'6 класс', q:'<b>3 ÷ 1/3</b> = ?', answer:'9', placeholder:'число', hint:'3 = 3/1, переверни 1/3.', explain:'3/1 × 3/1 = 9.', askExplain:false, ok:'«Верно!»', bad:'«3 × 3 = 9».' },
+      { type:'input', topic:'6 класс', q:'<b>5/6 ÷ 5/12</b> = ?', answer:'2', placeholder:'число', hint:'5/6 × 12/5.', explain:'60/30 = 2.', askExplain:false, ok:'«Верно!»', bad:'«60/30 = 2».' },
+      { type:'input', topic:'6 класс', q:'<b>2/5 ÷ 4/15</b> = ?', answer:'3/2', placeholder:'дробь', hint:'2/5 × 15/4.', explain:'30/20 = 3/2.', askExplain:false, ok:'«Верно!»', bad:'«30/20 = 3/2».' },
+      { type:'input', topic:'6 класс', q:'<b>1/4 ÷ 3/8</b> = ?', answer:'2/3', placeholder:'дробь', hint:'1/4 × 8/3.', explain:'8/12 = 2/3.', askExplain:false, ok:'«Верно!»', bad:'«8/12 = 2/3».' },
+      { type:'input', topic:'6 класс', q:'<b>7/10 ÷ 7/5</b> = ?', answer:'1/2', placeholder:'дробь', hint:'7/10 × 5/7.', explain:'35/70 = 1/2.', askExplain:false, ok:'«Верно!»', bad:'«35/70 = 1/2».' },
+      { type:'input', topic:'6 класс', q:'<b>4/9 ÷ 2/3</b> = ?', answer:'2/3', placeholder:'дробь', hint:'4/9 × 3/2.', explain:'12/18 = 2/3.', askExplain:false, ok:'«Верно!»', bad:'«12/18 = 2/3».' },
+      { type:'input', topic:'6 класс', q:'<b>1 ÷ 1/2</b> = ?', answer:'2', placeholder:'число', hint:'1 × 2/1.', explain:'2.', askExplain:false, ok:'«Верно!»', bad:'«2».' },
+      { type:'input', topic:'6 класс', q:'<b>5/8 ÷ 5/16</b> = ?', answer:'2', placeholder:'число', hint:'5/8 × 16/5.', explain:'80/40 = 2.', askExplain:false, ok:'«Верно!»', bad:'«80/40 = 2».' },
+      { type:'input', topic:'6 класс', q:'<b>3/7 ÷ 9/14</b> = ?', answer:'2/3', placeholder:'дробь', hint:'3/7 × 14/9.', explain:'42/63 = 2/3.', askExplain:false, ok:'«Верно!»', bad:'«42/63 = 2/3».' },
+      { type:'input', topic:'6 класс', q:'<b>2/3 ÷ 2/3</b> = ?', answer:'1', placeholder:'число', hint:'Любое число на себя — 1.', explain:'1.', askExplain:false, ok:'«Верно!»', bad:'«1».' },
+      { type:'input', topic:'6 класс', q:'<b>8/9 ÷ 4/3</b> = ?', answer:'2/3', placeholder:'дробь', hint:'8/9 × 3/4.', explain:'24/36 = 2/3.', askExplain:true, ok:'«Верно!»', bad:'«24/36 = 2/3».' }
+    ]
+  },
+  {
+    title: 'Смешанные числа',
+    diff: 'сложно',
+    teach: 'Смешанное число — целое + дробь: <b>2 1/3</b>. Чтобы сложить, переведи в неправильную дробь: 2 1/3 = (2×3+1)/3 = 7/3. Обратно: 7/3 = 2 целых и 1/3.',
+    ex: '1 1/2 = 3/2. 5/2 = 2 1/2.',
+    tasks: [
+      { type:'input', topic:'6 класс', q:'Запиши <b>2 1/3</b> неправильной дробью (через /).', answer:'7/3', placeholder:'дробь', hint:'2×3+1 сверху, 3 снизу.', explain:'2 1/3 = 7/3.', askExplain:false, ok:'«Верно!»', bad:'«2×3+1 = 7, знаменатель 3. 7/3».' },
+      { type:'input', topic:'6 класс', q:'Запиши <b>3 2/5</b> неправильной дробью.', answer:'17/5', placeholder:'дробь', hint:'3×5+2.', explain:'17/5.', askExplain:false, ok:'«Верно!»', bad:'«3×5+2 = 17. 17/5».' },
+      { type:'input', topic:'6 класс', q:'Запиши <b>11/4</b> смешанным числом. Формат: 2 1/2', answer:'2 3/4', placeholder:'x y/z', hint:'11 ÷ 4 = 2, остаток 3.', explain:'11/4 = 2 целых 3/4.', askExplain:false, ok:'«Верно!»', bad:'«11 ÷ 4 = 2 остаток 3 → 2 3/4».' },
+      { type:'input', topic:'6 класс', q:'Запиши <b>7/2</b> смешанным числом.', answer:'3 1/2', placeholder:'x y/z', hint:'7 ÷ 2 = 3, остаток 1.', explain:'7/2 = 3 1/2.', askExplain:false, ok:'«Верно!»', bad:'«3 1/2».' },
+      { type:'input', topic:'6 класс', q:'<b>1 1/2 + 1/2</b> = ?', answer:'2', placeholder:'число', hint:'1 1/2 = 3/2, 3/2 + 1/2 = 4/2.', explain:'2.', askExplain:false, ok:'«Верно!»', bad:'«2».' },
+      { type:'input', topic:'6 класс', q:'<b>2 1/2 + 1 1/2</b> = ?', answer:'4', placeholder:'число', hint:'Сложи целые и дроби отдельно.', explain:'2+1=3, 1/2+1/2=1, итого 4.', askExplain:false, ok:'«Верно!»', bad:'«4».' },
+      { type:'input', topic:'6 класс', q:'<b>3 1/3 − 1 1/3</b> = ?', answer:'2', placeholder:'число', hint:'Дроби вычтутся.', explain:'3−1=2, 1/3−1/3=0. Итого 2.', askExplain:false, ok:'«Верно!»', bad:'«2».' },
+      { type:'input', topic:'6 класс', q:'<b>2 1/2 × 2</b> = ?', answer:'5', placeholder:'число', hint:'2 1/2 = 5/2, × 2.', explain:'5/2 × 2 = 5.', askExplain:false, ok:'«Верно!»', bad:'«5».' },
+      { type:'input', topic:'6 класс', q:'Запиши <b>9/4</b> смешанным числом.', answer:'2 1/4', placeholder:'x y/z', hint:'9 ÷ 4 = 2, остаток 1.', explain:'2 1/4.', askExplain:false, ok:'«Верно!»', bad:'«2 1/4».' },
+      { type:'input', topic:'6 класс', q:'Запиши <b>1 2/3</b> неправильной дробью.', answer:'5/3', placeholder:'дробь', hint:'1×3+2.', explain:'5/3.', askExplain:false, ok:'«Верно!»', bad:'«5/3».' },
+      { type:'input', topic:'6 класс', q:'Запиши <b>15/5</b> целым числом.', answer:'3', placeholder:'число', hint:'15 ÷ 5.', explain:'3.', askExplain:false, ok:'«Верно!»', bad:'«3».' },
+      { type:'input', topic:'6 класс', q:'Запиши <b>13/6</b> смешанным числом.', answer:'2 1/6', placeholder:'x y/z', hint:'13 ÷ 6 = 2, остаток 1.', explain:'2 1/6.', askExplain:false, ok:'«Верно!»', bad:'«2 1/6».' },
+      { type:'input', topic:'6 класс', q:'<b>1 1/4 + 2 1/4</b> = ?', answer:'3 1/2', placeholder:'x y/z', hint:'Целые: 1+2=3. Дроби: 1/4+1/4=1/2.', explain:'3 1/2.', askExplain:false, ok:'«Верно!»', bad:'«3 1/2».' },
+      { type:'input', topic:'6 класс', q:'<b>5 1/2 − 2 1/2</b> = ?', answer:'3', placeholder:'число', hint:'Дроби одинаковые.', explain:'3.', askExplain:false, ok:'«Верно!»', bad:'«3».' },
+      { type:'input', topic:'6 класс', q:'<b>2 1/3 × 3</b> = ?', answer:'7', placeholder:'число', hint:'2 1/3 = 7/3, ×3.', explain:'7.', askExplain:true, ok:'«Верно!»', bad:'«7».' }
+    ]
+  },
+  {
+    title: 'Задачи на дроби',
+    diff: 'сложно',
+    teach: 'В задачах на дроби важно понять, от чего считаем. «2/5 от 30» — делим 30 на 5, умножаем на 2. «Сколько осталось» — вычитаем из целого. Будь внимателен: проценты и дроби — родственники.',
+    ex: '3/4 от 20 = 20 ÷ 4 × 3 = 15. Осталось 1/4 = 5.',
+    tasks: [
+      { type:'input', topic:'6 класс', q:'В классе 30 учеников. <b>2/5</b> — девочки. Сколько девочек?', answer:'12', placeholder:'число', hint:'30 ÷ 5 × 2.', explain:'30 ÷ 5 = 6, 6 × 2 = 12.', askExplain:false, ok:'«Верно!»', bad:'«30 ÷ 5 × 2 = 12».' },
+      { type:'input', topic:'6 класс', q:'Книга 240 страниц. Прочитали <b>3/8</b>. Сколько прочитали?', answer:'90', placeholder:'число', hint:'240 ÷ 8 × 3.', explain:'240 ÷ 8 = 30, × 3 = 90.', askExplain:false, ok:'«Верно!»', bad:'«240 ÷ 8 × 3 = 90».' },
+      { type:'input', topic:'6 класс', q:'Книга 240 страниц. Прочитали 3/8. Сколько <b>осталось</b>?', answer:'150', placeholder:'число', hint:'Всего − прочитано. 240 − 90.', explain:'240 − 90 = 150.', askExplain:false, ok:'«Верно!»', bad:'«240 − 90 = 150».' },
+      { type:'input', topic:'6 класс', q:'Торт 1200 г. Съели <b>1/4</b>. Сколько грамм съели?', answer:'300', placeholder:'г', hint:'1200 ÷ 4.', explain:'300 г.', askExplain:false, ok:'«Верно!»', bad:'«1200 ÷ 4 = 300».' },
+      { type:'input', topic:'6 класс', q:'Торт 1200 г. Съели 1/4. Сколько <b>осталось</b>?', answer:'900', placeholder:'г', hint:'1200 − 300.', explain:'900 г.', askExplain:false, ok:'«Верно!»', bad:'«1200 − 300 = 900».' },
+      { type:'input', topic:'6 класс', q:'В корзине 45 яблок. <b>3/5</b> — красные. Сколько красных?', answer:'27', placeholder:'число', hint:'45 ÷ 5 × 3.', explain:'45 ÷ 5 = 9, × 3 = 27.', askExplain:false, ok:'«Верно!»', bad:'«45 ÷ 5 × 3 = 27».' },
+      { type:'input', topic:'6 класс', q:'В корзине 45 яблок. 3/5 красные. Сколько <b>не красных</b>?', answer:'18', placeholder:'число', hint:'45 − 27.', explain:'45 − 27 = 18.', askExplain:false, ok:'«Верно!»', bad:'«45 − 27 = 18».' },
+      { type:'input', topic:'6 класс', q:'У Сени 60 рублей. Он потратил <b>2/3</b>. Сколько потратил?', answer:'40', placeholder:'руб', hint:'60 ÷ 3 × 2.', explain:'40 руб.', askExplain:false, ok:'«Верно!»', bad:'«60 ÷ 3 × 2 = 40».' },
+      { type:'input', topic:'6 класс', q:'У Сени 60 рублей. Потратил 2/3. Сколько <b>осталось</b>?', answer:'20', placeholder:'руб', hint:'60 − 40.', explain:'20 руб.', askExplain:false, ok:'«Верно!»', bad:'«60 − 40 = 20».' },
+      { type:'input', topic:'6 класс', q:'Путь 300 км. Проехали <b>5/6</b>. Сколько км проехали?', answer:'250', placeholder:'км', hint:'300 ÷ 6 × 5.', explain:'300 ÷ 6 = 50, × 5 = 250.', askExplain:false, ok:'«Верно!»', bad:'«300 ÷ 6 × 5 = 250».' },
+      { type:'input', topic:'6 класс', q:'Путь 300 км. Проехали 5/6. Сколько <b>осталось</b>?', answer:'50', placeholder:'км', hint:'300 − 250.', explain:'50 км.', askExplain:false, ok:'«Верно!»', bad:'«300 − 250 = 50».' },
+      { type:'input', topic:'6 класс', q:'В саду 80 деревьев. <b>3/10</b> — вишни. Сколько вишен?', answer:'24', placeholder:'число', hint:'80 ÷ 10 × 3.', explain:'24.', askExplain:false, ok:'«Верно!»', bad:'«80 ÷ 10 × 3 = 24».' },
+      { type:'input', topic:'6 класс', q:'В саду 80 деревьев. 3/10 вишни. Сколько <b>не вишен</b>?', answer:'56', placeholder:'число', hint:'80 − 24.', explain:'56.', askExplain:false, ok:'«Верно!»', bad:'«80 − 24 = 56».' },
+      { type:'input', topic:'6 класс', q:'Пирог 800 г. Съели <b>5/8</b>. Сколько грамм съели?', answer:'500', placeholder:'г', hint:'800 ÷ 8 × 5.', explain:'500 г.', askExplain:false, ok:'«Верно!»', bad:'«800 ÷ 8 × 5 = 500».' },
+      { type:'input', topic:'6 класс', q:'Пирог 800 г. Съели 5/8. Сколько <b>осталось</b>?', answer:'300', placeholder:'г', hint:'800 − 500.', explain:'300 г.', askExplain:true, ok:'«Верно!»', bad:'«800 − 500 = 300».' }
+    ]
+  },
+  {
+    title: 'Уравнения: что это такое',
+    diff: 'легко',
+    teach: 'Уравнение — это равенство с неизвестным (обычно <b>x</b>). Задача — найти такое число, при котором равенство станет верным. <b>x + 3 = 7</b> → какое число прибавить к 3, чтобы получить 7?',
+    ex: 'x + 5 = 9 → x = 4. Проверка: 4 + 5 = 9.',
+    tasks: [
+      { type:'input', topic:'5 класс', q:'Реши: <b>x + 4 = 10</b>', answer:'6', placeholder:'x', hint:'Какое число + 4 = 10?', explain:'x = 6.', askExplain:false, ok:'«Верно!»', bad:'«x = 6».' },
+      { type:'input', topic:'5 класс', q:'Реши: <b>x − 3 = 5</b>', answer:'8', placeholder:'x', hint:'Какое число − 3 = 5?', explain:'x = 8.', askExplain:false, ok:'«Верно!»', bad:'«x = 8».' },
+      { type:'input', topic:'5 класс', q:'Реши: <b>7 + x = 12</b>', answer:'5', placeholder:'x', hint:'12 − 7.', explain:'x = 5.', askExplain:false, ok:'«Верно!»', bad:'«x = 5».' },
+      { type:'input', topic:'5 класс', q:'Реши: <b>x − 6 = 4</b>', answer:'10', placeholder:'x', hint:'4 + 6.', explain:'x = 10.', askExplain:false, ok:'«Верно!»', bad:'«x = 10».' },
+      { type:'input', topic:'5 класс', q:'Реши: <b>15 − x = 9</b>', answer:'6', placeholder:'x', hint:'15 − 9.', explain:'x = 6.', askExplain:false, ok:'«Верно!»', bad:'«x = 6».' },
+      { type:'input', topic:'5 класс', q:'Реши: <b>x + 8 = 15</b>', answer:'7', placeholder:'x', hint:'15 − 8.', explain:'x = 7.', askExplain:false, ok:'«Верно!»', bad:'«x = 7».' },
+      { type:'input', topic:'5 класс', q:'Реши: <b>x − 9 = 1</b>', answer:'10', placeholder:'x', hint:'1 + 9.', explain:'x = 10.', askExplain:false, ok:'«Верно!»', bad:'«x = 10».' },
+      { type:'input', topic:'5 класс', q:'Реши: <b>20 − x = 12</b>', answer:'8', placeholder:'x', hint:'20 − 12.', explain:'x = 8.', askExplain:false, ok:'«Верно!»', bad:'«x = 8».' },
+      { type:'input', topic:'5 класс', q:'Реши: <b>2x = 10</b>', answer:'5', placeholder:'x', hint:'10 ÷ 2.', explain:'x = 5.', askExplain:false, ok:'«Верно!»', bad:'«x = 5».' },
+      { type:'input', topic:'5 класс', q:'Реши: <b>3x = 12</b>', answer:'4', placeholder:'x', hint:'12 ÷ 3.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'5 класс', q:'Реши: <b>x/2 = 6</b>', answer:'12', placeholder:'x', hint:'6 × 2.', explain:'x = 12.', askExplain:false, ok:'«Верно!»', bad:'«x = 12».' },
+      { type:'input', topic:'5 класс', q:'Реши: <b>x/4 = 3</b>', answer:'12', placeholder:'x', hint:'3 × 4.', explain:'x = 12.', askExplain:false, ok:'«Верно!»', bad:'«x = 12».' },
+      { type:'input', topic:'5 класс', q:'Реши: <b>4x = 20</b>', answer:'5', placeholder:'x', hint:'20 ÷ 4.', explain:'x = 5.', askExplain:false, ok:'«Верно!»', bad:'«x = 5».' },
+      { type:'input', topic:'5 класс', q:'Реши: <b>5x = 45</b>', answer:'9', placeholder:'x', hint:'45 ÷ 5.', explain:'x = 9.', askExplain:false, ok:'«Верно!»', bad:'«x = 9».' },
+      { type:'input', topic:'5 класс', q:'Реши: <b>x + x = 8</b>', answer:'4', placeholder:'x', hint:'2x = 8.', explain:'x = 4.', askExplain:true, ok:'«Верно!»', bad:'«x = 4».' }
+    ]
+  },
+  {
+    title: 'Уравнения с двумя действиями',
+    diff: 'средне',
+    teach: 'Сначала убираем сложение/вычитание (переносим числа), потом делим/умножаем. <b>2x + 3 = 11</b> → 2x = 8 → x = 4.',
+    ex: '3x − 2 = 10 → 3x = 12 → x = 4.',
+    tasks: [
+      { type:'input', topic:'6 класс', q:'Реши: <b>2x + 1 = 9</b>', answer:'4', placeholder:'x', hint:'2x = 8.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>3x − 4 = 8</b>', answer:'4', placeholder:'x', hint:'3x = 12.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>4x + 2 = 18</b>', answer:'4', placeholder:'x', hint:'4x = 16.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>5x − 5 = 20</b>', answer:'5', placeholder:'x', hint:'5x = 25.', explain:'x = 5.', askExplain:false, ok:'«Верно!»', bad:'«x = 5».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>2x + 7 = 15</b>', answer:'4', placeholder:'x', hint:'2x = 8.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>3x − 1 = 14</b>', answer:'5', placeholder:'x', hint:'3x = 15.', explain:'x = 5.', askExplain:false, ok:'«Верно!»', bad:'«x = 5».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>6x + 3 = 27</b>', answer:'4', placeholder:'x', hint:'6x = 24.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>7x − 6 = 15</b>', answer:'3', placeholder:'x', hint:'7x = 21.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>x/2 + 3 = 7</b>', answer:'8', placeholder:'x', hint:'x/2 = 4.', explain:'x = 8.', askExplain:false, ok:'«Верно!»', bad:'«x = 8».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>x/3 − 2 = 1</b>', answer:'9', placeholder:'x', hint:'x/3 = 3.', explain:'x = 9.', askExplain:false, ok:'«Верно!»', bad:'«x = 9».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>x/4 + 1 = 5</b>', answer:'16', placeholder:'x', hint:'x/4 = 4.', explain:'x = 16.', askExplain:false, ok:'«Верно!»', bad:'«x = 16».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>x/5 − 1 = 2</b>', answer:'15', placeholder:'x', hint:'x/5 = 3.', explain:'x = 15.', askExplain:false, ok:'«Верно!»', bad:'«x = 15».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>2x + 10 = 20</b>', answer:'5', placeholder:'x', hint:'2x = 10.', explain:'x = 5.', askExplain:false, ok:'«Верно!»', bad:'«x = 5».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>8x − 4 = 28</b>', answer:'4', placeholder:'x', hint:'8x = 32.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>3x + 9 = 0</b>', answer:'-3', placeholder:'x', hint:'3x = -9.', explain:'x = -3.', askExplain:true, ok:'«Верно!»', bad:'«x = -3».' }
+    ]
+  },
+  {
+    title: 'Уравнения со скобками',
+    diff: 'средне',
+    teach: 'Раскрываем скобки: число перед скобкой умножаем на каждый член внутри. <b>2(x + 3) = 10</b> → 2x + 6 = 10 → 2x = 4 → x = 2.',
+    ex: '3(x − 2) = 9 → 3x − 6 = 9 → 3x = 15 → x = 5.',
+    tasks: [
+      { type:'input', topic:'6 класс', q:'Реши: <b>2(x + 1) = 8</b>', answer:'3', placeholder:'x', hint:'2x + 2 = 8.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>3(x − 2) = 9</b>', answer:'5', placeholder:'x', hint:'3x − 6 = 9.', explain:'x = 5.', askExplain:false, ok:'«Верно!»', bad:'«x = 5».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>4(x + 2) = 20</b>', answer:'3', placeholder:'x', hint:'4x + 8 = 20.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>5(x − 1) = 15</b>', answer:'4', placeholder:'x', hint:'5x − 5 = 15.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>2(x + 5) = 14</b>', answer:'2', placeholder:'x', hint:'2x + 10 = 14.', explain:'x = 2.', askExplain:false, ok:'«Верно!»', bad:'«x = 2».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>3(x + 4) = 21</b>', answer:'3', placeholder:'x', hint:'3x + 12 = 21.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>6(x − 2) = 12</b>', answer:'4', placeholder:'x', hint:'6x − 12 = 12.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>7(x + 1) = 21</b>', answer:'2', placeholder:'x', hint:'7x + 7 = 21.', explain:'x = 2.', askExplain:false, ok:'«Верно!»', bad:'«x = 2».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>2(x + 2) = x + 7</b>', answer:'3', placeholder:'x', hint:'2x + 4 = x + 7.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>3(x − 1) = x + 5</b>', answer:'4', placeholder:'x', hint:'3x − 3 = x + 5.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>4(x + 1) = 2x + 10</b>', answer:'3', placeholder:'x', hint:'4x + 4 = 2x + 10.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>5(x − 2) = 2x + 1</b>', answer:'11/3', placeholder:'x', hint:'5x − 10 = 2x + 1.', explain:'x = 11/3.', askExplain:false, ok:'«Верно!»', bad:'«x = 11/3».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>2(2x + 1) = 10</b>', answer:'2', placeholder:'x', hint:'4x + 2 = 10.', explain:'x = 2.', askExplain:false, ok:'«Верно!»', bad:'«x = 2».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>3(2x − 3) = 9</b>', answer:'3', placeholder:'x', hint:'6x − 9 = 9.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>2(x + 3) = 3(x − 1)</b>', answer:'9', placeholder:'x', hint:'2x + 6 = 3x − 3.', explain:'x = 9.', askExplain:true, ok:'«Верно!»', bad:'«x = 9».' }
+    ]
+  },
+  {
+    title: 'Уравнения с дробями',
+    diff: 'сложно',
+    teach: 'Если x в числителе дроби — умножаем обе части на знаменатель. <b>x/3 = 4</b> → x = 12.',
+    ex: 'x/5 = 6 → x = 30.',
+    tasks: [
+      { type:'input', topic:'6 класс', q:'Реши: <b>x/2 = 5</b>', answer:'10', placeholder:'x', hint:'5 × 2.', explain:'x = 10.', askExplain:false, ok:'«Верно!»', bad:'«x = 10».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>x/3 = 7</b>', answer:'21', placeholder:'x', hint:'7 × 3.', explain:'x = 21.', askExplain:false, ok:'«Верно!»', bad:'«x = 21».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>x/4 = 8</b>', answer:'32', placeholder:'x', hint:'8 × 4.', explain:'x = 32.', askExplain:false, ok:'«Верно!»', bad:'«x = 32».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>x/5 = 9</b>', answer:'45', placeholder:'x', hint:'9 × 5.', explain:'x = 45.', askExplain:false, ok:'«Верно!»', bad:'«x = 45».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>x/6 = 2</b>', answer:'12', placeholder:'x', hint:'2 × 6.', explain:'x = 12.', askExplain:false, ok:'«Верно!»', bad:'«x = 12».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>x/7 = 3</b>', answer:'21', placeholder:'x', hint:'3 × 7.', explain:'x = 21.', askExplain:false, ok:'«Верно!»', bad:'«x = 21».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>x/8 = 1</b>', answer:'8', placeholder:'x', hint:'1 × 8.', explain:'x = 8.', askExplain:false, ok:'«Верно!»', bad:'«x = 8».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>x/10 = 4</b>', answer:'40', placeholder:'x', hint:'4 × 10.', explain:'x = 40.', askExplain:false, ok:'«Верно!»', bad:'«x = 40».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>2x/3 = 4</b>', answer:'6', placeholder:'x', hint:'2x = 12.', explain:'x = 6.', askExplain:false, ok:'«Верно!»', bad:'«x = 6».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>3x/4 = 6</b>', answer:'8', placeholder:'x', hint:'3x = 24.', explain:'x = 8.', askExplain:false, ok:'«Верно!»', bad:'«x = 8».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>5x/2 = 10</b>', answer:'4', placeholder:'x', hint:'5x = 20.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>4x/5 = 8</b>', answer:'10', placeholder:'x', hint:'4x = 40.', explain:'x = 10.', askExplain:false, ok:'«Верно!»', bad:'«x = 10».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>3x/7 = 6</b>', answer:'14', placeholder:'x', hint:'3x = 42.', explain:'x = 14.', askExplain:false, ok:'«Верно!»', bad:'«x = 14».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>5x/6 = 5</b>', answer:'6', placeholder:'x', hint:'5x = 30.', explain:'x = 6.', askExplain:false, ok:'«Верно!»', bad:'«x = 6».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>2x/9 = 4</b>', answer:'18', placeholder:'x', hint:'2x = 36.', explain:'x = 18.', askExplain:true, ok:'«Верно!»', bad:'«x = 18».' }
+    ]
+  },
+  {
+    title: 'Отрицательные числа в уравнениях',
+    diff: 'сложно',
+    teach: 'Минус — это долг. <b>x + (−3) = 5</b> — то же, что x − 3 = 5. Минус на минус даёт плюс. <b>−2x = 6</b> → x = −3.',
+    ex: 'x − (−2) = 4 → x + 2 = 4 → x = 2.',
+    tasks: [
+      { type:'input', topic:'6 класс', q:'Реши: <b>x + (−3) = 4</b>', answer:'7', placeholder:'x', hint:'x − 3 = 4.', explain:'x = 7.', askExplain:false, ok:'«Верно!»', bad:'«x = 7».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>x − (−2) = 5</b>', answer:'3', placeholder:'x', hint:'x + 2 = 5.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>−2x = 8</b>', answer:'-4', placeholder:'x', hint:'8 ÷ (−2).', explain:'x = -4.', askExplain:false, ok:'«Верно!»', bad:'«x = -4».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>−3x = 9</b>', answer:'-3', placeholder:'x', hint:'9 ÷ (−3).', explain:'x = -3.', askExplain:false, ok:'«Верно!»', bad:'«x = -3».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>x + (−5) = −2</b>', answer:'3', placeholder:'x', hint:'x − 5 = −2.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>x − (−3) = −1</b>', answer:'-4', placeholder:'x', hint:'x + 3 = −1.', explain:'x = -4.', askExplain:false, ok:'«Верно!»', bad:'«x = -4».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>2x + (−3) = 5</b>', answer:'4', placeholder:'x', hint:'2x − 3 = 5.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>3x − (−2) = 11</b>', answer:'3', placeholder:'x', hint:'3x + 2 = 11.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>−x = 5</b>', answer:'-5', placeholder:'x', hint:'x = −5.', explain:'x = -5.', askExplain:false, ok:'«Верно!»', bad:'«x = -5».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>−x = −3</b>', answer:'3', placeholder:'x', hint:'x = 3.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>−4x = −12</b>', answer:'3', placeholder:'x', hint:'−12 ÷ (−4).', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>−5x = 0</b>', answer:'0', placeholder:'x', hint:'0 ÷ (−5).', explain:'x = 0.', askExplain:false, ok:'«Верно!»', bad:'«x = 0».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>2x − (−4) = 10</b>', answer:'3', placeholder:'x', hint:'2x + 4 = 10.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>−3x + 2 = −7</b>', answer:'3', placeholder:'x', hint:'−3x = −9.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'6 класс', q:'Реши: <b>−2(x − 1) = 6</b>', answer:'-2', placeholder:'x', hint:'−2x + 2 = 6.', explain:'x = -2.', askExplain:true, ok:'«Верно!»', bad:'«x = -2».' }
+    ]
+  },
+  {
+    title: 'Уравнения с x с двух сторон',
+    diff: 'жёстко',
+    teach: 'Переносим все x влево, числа вправо. При переносе через равно знак меняется. <b>5x − 2 = 3x + 4</b> → 2x = 6 → x = 3.',
+    ex: '7x + 1 = 4x + 10 → 3x = 9 → x = 3.',
+    tasks: [
+      { type:'input', topic:'7 класс', q:'Реши: <b>3x = 2x + 5</b>', answer:'5', placeholder:'x', hint:'3x − 2x = 5.', explain:'x = 5.', askExplain:false, ok:'«Верно!»', bad:'«x = 5».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>4x = x + 9</b>', answer:'3', placeholder:'x', hint:'4x − x = 9.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>5x − 2 = 3x + 4</b>', answer:'3', placeholder:'x', hint:'2x = 6.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>6x + 1 = 4x + 9</b>', answer:'4', placeholder:'x', hint:'2x = 8.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>7x − 3 = 5x + 5</b>', answer:'4', placeholder:'x', hint:'2x = 8.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>8x + 2 = 6x + 10</b>', answer:'4', placeholder:'x', hint:'2x = 8.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>9x − 4 = 7x + 6</b>', answer:'5', placeholder:'x', hint:'2x = 10.', explain:'x = 5.', askExplain:false, ok:'«Верно!»', bad:'«x = 5».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>10x + 5 = 8x + 15</b>', answer:'5', placeholder:'x', hint:'2x = 10.', explain:'x = 5.', askExplain:false, ok:'«Верно!»', bad:'«x = 5».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>2x + 10 = 5x − 2</b>', answer:'4', placeholder:'x', hint:'12 = 3x.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>4x − 5 = 7x − 14</b>', answer:'3', placeholder:'x', hint:'9 = 3x.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>5x + 3 = 8x − 6</b>', answer:'3', placeholder:'x', hint:'9 = 3x.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>x + 8 = 4x − 4</b>', answer:'4', placeholder:'x', hint:'12 = 3x.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>6x − 2 = 2x + 10</b>', answer:'3', placeholder:'x', hint:'4x = 12.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>3x + 7 = 6x − 2</b>', answer:'3', placeholder:'x', hint:'9 = 3x.', explain:'x = 3.', askExplain:false, ok:'«Верно!»', bad:'«x = 3».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>2x − 3 = 4x + 1</b>', answer:'-2', placeholder:'x', hint:'−4 = 2x.', explain:'x = -2.', askExplain:true, ok:'«Верно!»', bad:'«x = -2».' }
+    ]
+  },
+  {
+    title: 'Уравнения с дробями и скобками',
+    diff: 'жёстко',
+    teach: 'Если есть дроби и скобки — сначала раскрой скобки, потом умножь всё на знаменатель. <b>(x + 1)/2 = 3</b> → x + 1 = 6 → x = 5.',
+    ex: '(2x − 1)/3 = 5 → 2x − 1 = 15 → 2x = 16 → x = 8.',
+    tasks: [
+      { type:'input', topic:'7 класс', q:'Реши: <b>(x + 1)/2 = 3</b>', answer:'5', placeholder:'x', hint:'x + 1 = 6.', explain:'x = 5.', askExplain:false, ok:'«Верно!»', bad:'«x = 5».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>(x − 2)/3 = 4</b>', answer:'14', placeholder:'x', hint:'x − 2 = 12.', explain:'x = 14.', askExplain:false, ok:'«Верно!»', bad:'«x = 14».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>(2x + 1)/3 = 3</b>', answer:'4', placeholder:'x', hint:'2x + 1 = 9.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>(3x − 2)/4 = 4</b>', answer:'6', placeholder:'x', hint:'3x − 2 = 16.', explain:'x = 6.', askExplain:false, ok:'«Верно!»', bad:'«x = 6».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>(x + 3)/5 = 2</b>', answer:'7', placeholder:'x', hint:'x + 3 = 10.', explain:'x = 7.', askExplain:false, ok:'«Верно!»', bad:'«x = 7».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>(2x − 4)/2 = 5</b>', answer:'7', placeholder:'x', hint:'2x − 4 = 10.', explain:'x = 7.', askExplain:false, ok:'«Верно!»', bad:'«x = 7».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>(3x + 3)/3 = 6</b>', answer:'5', placeholder:'x', hint:'3x + 3 = 18.', explain:'x = 5.', askExplain:false, ok:'«Верно!»', bad:'«x = 5».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>(4x − 8)/4 = 3</b>', answer:'5', placeholder:'x', hint:'4x − 8 = 12.', explain:'x = 5.', askExplain:false, ok:'«Верно!»', bad:'«x = 5».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>x/2 + x/3 = 5</b>', answer:'6', placeholder:'x', hint:'5x/6 = 5.', explain:'x = 6.', askExplain:false, ok:'«Верно!»', bad:'«x = 6».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>x/4 + x/2 = 3</b>', answer:'4', placeholder:'x', hint:'3x/4 = 3.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>x/3 − x/6 = 2</b>', answer:'12', placeholder:'x', hint:'x/6 = 2.', explain:'x = 12.', askExplain:false, ok:'«Верно!»', bad:'«x = 12».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>x/2 + 1/2 = 3</b>', answer:'5', placeholder:'x', hint:'(x + 1)/2 = 3.', explain:'x = 5.', askExplain:false, ok:'«Верно!»', bad:'«x = 5».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>2(x + 1)/3 = 4</b>', answer:'5', placeholder:'x', hint:'2(x+1) = 12.', explain:'x = 5.', askExplain:false, ok:'«Верно!»', bad:'«x = 5».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>(x + 2)/4 = (x − 1)/2</b>', answer:'4', placeholder:'x', hint:'x + 2 = 2(x − 1).', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'7 класс', q:'Реши: <b>3(x − 1)/2 = 6</b>', answer:'5', placeholder:'x', hint:'3(x−1) = 12.', explain:'x = 5.', askExplain:true, ok:'«Верно!»', bad:'«x = 5».' }
+    ]
+  },
+  {
+    title: 'Текстовые задачи с уравнениями',
+    diff: 'жёстко',
+    teach: 'В задачах обозначай неизвестное за x, составляй уравнение по условию. <b>«Задумали число, умножили на 3, прибавили 2, получили 14»</b> → 3x + 2 = 14 → x = 4.',
+    ex: 'Число увеличили в 2 раза и получили 10 → 2x = 10 → x = 5.',
+    tasks: [
+      { type:'input', topic:'7 класс', q:'Задумали число, умножили на 2, получили 12. Какое число?', answer:'6', placeholder:'x', hint:'2x = 12.', explain:'x = 6.', askExplain:false, ok:'«Верно!»', bad:'«x = 6».' },
+      { type:'input', topic:'7 класс', q:'Число увеличили на 5, стало 12. Какое число?', answer:'7', placeholder:'x', hint:'x + 5 = 12.', explain:'x = 7.', askExplain:false, ok:'«Верно!»', bad:'«x = 7».' },
+      { type:'input', topic:'7 класс', q:'Число уменьшили в 3 раза, стало 5. Какое число?', answer:'15', placeholder:'x', hint:'x/3 = 5.', explain:'x = 15.', askExplain:false, ok:'«Верно!»', bad:'«x = 15».' },
+      { type:'input', topic:'7 класс', q:'К числу прибавили 8, получили 20. Какое число?', answer:'12', placeholder:'x', hint:'x + 8 = 20.', explain:'x = 12.', askExplain:false, ok:'«Верно!»', bad:'«x = 12».' },
+      { type:'input', topic:'7 класс', q:'Число умножили на 4 и вычли 3, получили 17. Какое число?', answer:'5', placeholder:'x', hint:'4x − 3 = 17.', explain:'x = 5.', askExplain:false, ok:'«Верно!»', bad:'«x = 5».' },
+      { type:'input', topic:'7 класс', q:'У Сени было x рублей, он купил 3 ручки по 15 руб, у него осталось 25. Сколько было?', answer:'70', placeholder:'руб', hint:'x − 45 = 25.', explain:'x = 70.', askExplain:false, ok:'«Верно!»', bad:'«x = 70».' },
+      { type:'input', topic:'7 класс', q:'Задумали число, умножили на 5, прибавили 7, получили 32. Число?', answer:'5', placeholder:'x', hint:'5x + 7 = 32.', explain:'x = 5.', askExplain:false, ok:'«Верно!»', bad:'«x = 5».' },
+      { type:'input', topic:'7 класс', q:'Возраст отца в 3 раза больше возраста сына. Вместе им 40 лет. Сколько лет сыну?', answer:'10', placeholder:'лет', hint:'x + 3x = 40.', explain:'x = 10.', askExplain:false, ok:'«Верно!»', bad:'«x = 10».' },
+      { type:'input', topic:'7 класс', q:'Периметр квадрата 20 см. Какова сторона?', answer:'5', placeholder:'см', hint:'4x = 20.', explain:'x = 5.', askExplain:false, ok:'«Верно!»', bad:'«x = 5».' },
+      { type:'input', topic:'7 класс', q:'Число уменьшили на 3, потом увеличили в 2 раза, получили 10. Какое число?', answer:'8', placeholder:'x', hint:'2(x − 3) = 10.', explain:'x = 8.', askExplain:false, ok:'«Верно!»', bad:'«x = 8».' },
+      { type:'input', topic:'7 класс', q:'В двух корзинах 30 яблок, в одной в 2 раза больше. Сколько в меньшей?', answer:'10', placeholder:'яб', hint:'x + 2x = 30.', explain:'x = 10.', askExplain:false, ok:'«Верно!»', bad:'«x = 10».' },
+      { type:'input', topic:'7 класс', q:'Задумали число, прибавили 5, умножили на 2, получили 18. Число?', answer:'4', placeholder:'x', hint:'2(x + 5) = 18.', explain:'x = 4.', askExplain:false, ok:'«Верно!»', bad:'«x = 4».' },
+      { type:'input', topic:'7 класс', q:'У Пети на 7 марок больше, чем у Васи. Вместе 25. Сколько у Васи?', answer:'9', placeholder:'шт', hint:'x + (x + 7) = 25.', explain:'x = 9.', askExplain:false, ok:'«Верно!»', bad:'«x = 9».' },
+      { type:'input', topic:'7 класс', q:'Три последовательных числа в сумме дают 24. Какое первое?', answer:'7', placeholder:'x', hint:'x + (x+1) + (x+2) = 24.', explain:'x = 7.', askExplain:false, ok:'«Верно!»', bad:'«x = 7».' },
+      { type:'input', topic:'7 класс', q:'Задумали число, вычли 4, умножили на 3, получили 15. Число?', answer:'9', placeholder:'x', hint:'3(x − 4) = 15.', explain:'x = 9.', askExplain:true, ok:'«Верно!»', bad:'«x = 9».' }
+    ]
+  }
+  ]
+};
+
+/* ═══════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+let chosenLesson = -1;
+let taskIndex = 0;
+let stars = 0;
+let answered = false;
+let selectedOpt = null;
+let timerLeft = 45 * 60;
+let timerId = null;
+let breakLeft = 0;
+let breakId = null;
+let studentName = 'Сеня';
+let savedProgress = {};
+try { savedProgress = JSON.parse(localStorage.getItem('ded-drobi') || '{}'); } catch(e) { savedProgress = {}; }
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $('screen-' + name).classList.add('active');
+}
+function fmt(sec) {
+  const m = Math.floor(sec/60), s = sec%60;
+  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+function saveProgress() {
+  savedProgress[chosenLesson] = { stars: stars, done: taskIndex >= THEME.lessons[chosenLesson].tasks.length };
+  localStorage.setItem('ded-drobi', JSON.stringify(savedProgress));
+}
+
+function renderLessonGrid() {
+  const grid = $('lessonGrid');
+  grid.innerHTML = '';
+  
+  THEME.lessons.forEach((lesson, i) => {
+    const b = document.createElement('button');
+    const done = savedProgress[i] && savedProgress[i].done;
+    b.className = 'lesson-card' + (i === chosenLesson ? ' selected' : '') + (done ? ' done' : '');
+    b.innerHTML = `<div class="n">Урок ${i+1}</div><div class="t">${lesson.title}</div><div class="diff">${lesson.diff}</div>${done ? '<div class="done-mark">✓</div>' : ''}`;
+    b.onclick = () => {
+      chosenLesson = i;
+      renderLessonGrid();
+      $('goBtn').disabled = false;
+    };
+    grid.appendChild(b);
+  });
+
+  // Плашка "В разработке" на 20-й урок
+  const devBtn = document.createElement('button');
+  devBtn.className = 'lesson-card';
+  devBtn.style.borderColor = 'var(--gold)';
+  devBtn.innerHTML = `<div class="n" style="color:var(--gold)">Урок 20</div><div class="t">В разработке</div><div class="diff" style="color:var(--gold)">Следите за обновлениями</div>`;
+  devBtn.onclick = () => {
+    alert("Скоро тут будет новая тема, контрольная и итог! А пока следи за обновлениями 🐝");
+  };
+  grid.appendChild(devBtn);
+}
+
+$('nameInput').addEventListener('input', () => {
+  studentName = $('nameInput').value.trim() || 'Сеня';
+  $('topWho').textContent = studentName;
+});
+function startChosen() {
+  studentName = $('nameInput').value.trim() || 'Сеня';
+  $('topWho').textContent = studentName;
+  if (chosenLesson < 0) return;
+  taskIndex = 0;
+  stars = 0;
+  timerLeft = 45 * 60;
+  showScreen('lesson');
+  renderTask();
+  if (timerId) clearInterval(timerId);
+  timerId = setInterval(() => {
+    timerLeft--;
+    if (timerLeft < 0) timerLeft = 0;
+    $('timer').textContent = fmt(timerLeft);
+    if (timerLeft === 0) { clearInterval(timerId); finish(true); }
+  }, 1000);
+  $('timer').textContent = fmt(timerLeft);
+}
+function currentLesson() { return THEME.lessons[chosenLesson]; }
+function currentTasks() { return currentLesson().tasks; }
+
+function renderTask() {
+  const lesson = currentLesson();
+  const tasks = currentTasks();
+  const t = tasks[taskIndex];
+  if (!t) { finish(false); return; }
+
+  $('lessonTitle').textContent = `Урок ${chosenLesson+1}: ${lesson.title}`;
+  $('teachText').innerHTML = lesson.teach;
+  $('teachEx').innerHTML = lesson.ex;
+  $('progressFill').style.width = (taskIndex / tasks.length * 100) + '%';
+
+  answered = false;
+  selectedOpt = null;
+  $('fb').className = 'fb';
+  $('hintBox').className = 'hint';
+  $('hintBox').innerHTML = '';
+  $('explainBox').className = 'explain';
+  $('explainInput').value = '';
+  $('checkBtn').style.display = 'inline-block';
+  $('checkBtn').disabled = false;
+  $('nextBtn').style.display = 'none';
+  $('hintBtn').style.display = 'inline-block';
+  $('hintBtn').disabled = false;
+
+  const wrap = $('taskWrap');
+  wrap.innerHTML = '';
+  const card = document.createElement('div');
+  card.className = 'task';
+  const q = document.createElement('div');
+  q.className = 'q';
+  q.innerHTML = `🧠 <b>${studentName}, карточка ${taskIndex+1} из ${tasks.length}:</b><br>${t.q}`;
+  card.appendChild(q);
+
+  if (t.type === 'choice') {
+    const opts = document.createElement('div');
+    opts.className = 'opts';
+    t.options.forEach(o => {
+      const b = document.createElement('button');
+      b.className = 'opt';
+      b.textContent = o;
+      b.onclick = () => {
+        if (answered) return;
+        opts.querySelectorAll('.opt').forEach(x => x.classList.remove('sel'));
+        b.classList.add('sel');
+        selectedOpt = o;
+      };
+      opts.appendChild(b);
+    });
+    card.appendChild(opts);
+  } else {
+    const row = document.createElement('div');
+    row.className = 'ans-row';
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.placeholder = t.placeholder || '';
+    inp.id = 'ansInput';
+    inp.onkeydown = e => { if (e.key === 'Enter') check(); };
+    row.appendChild(inp);
+    card.appendChild(row);
+  }
+  wrap.appendChild(card);
+}
+function showHint() {
+  const t = currentTasks()[taskIndex];
+  if (!t.hint) return;
+  $('hintBox').innerHTML = `<b>Дед намекает:</b> ${t.hint}`;
+  $('hintBox').classList.add('show');
+  $('hintBtn').disabled = true;
+  stars = Math.max(0, stars - 1);
+}
+function norm(s) {
+  return s.replace(',', '.').replace(/\s/g,'').replace('−','-').replace('–','-').trim();
+}
+function check() {
+  if (answered) return;
+  const t = currentTasks()[taskIndex];
+  const card = document.querySelector('.task');
+  let userAns = null;
+
+  if (t.type === 'choice') {
+    if (!selectedOpt) { fbMsg('Выбери ответ 🙂', 'bad'); return; }
+    userAns = selectedOpt;
+  } else {
+    userAns = $('ansInput').value.trim();
+    if (!userAns) { fbMsg('Впиши ответ 🙂', 'bad'); return; }
+  }
+  const correct = t.type === 'choice' ? t.correct : t.answer;
+  const isOk = norm(userAns) === norm(correct);
+
+  if (isOk) {
+    answered = true;
+    card.classList.add('ok');
+    if (t.type === 'choice') {
+      card.querySelectorAll('.opt').forEach(b => {
+        b.disabled = true;
+        if (b.textContent === t.correct) b.classList.add('ok');
+      });
+    } else { $('ansInput').disabled = true; }
+    stars++;
+    fbMsg(`Верно! ${t.explain}<span class="deg">${t.ok || ''}</span>`, 'ok');
+  } else {
+    card.classList.add('bad');
+    if (t.type === 'choice') {
+      card.querySelectorAll('.opt').forEach(b => {
+        b.disabled = true;
+        if (b.textContent === t.correct) b.classList.add('ok');
+        if (b.textContent === userAns) b.classList.add('bad');
+      });
+    } else { $('ansInput').disabled = true; }
+    fbMsg(`Правильный ответ: ${correct}. ${t.explain}<span class="deg">${t.bad || ''}</span>`, 'bad');
+  }
+  if (t.askExplain) $('explainBox').classList.add('show');
+  $('checkBtn').style.display = 'none';
+  $('nextBtn').style.display = 'inline-block';
+  $('hintBtn').style.display = 'none';
+}
+function fbMsg(msg, type) {
+  const f = $('fb');
+  f.innerHTML = msg;
+  f.className = 'fb show ' + type;
+}
+function nextTask() {
+  taskIndex++;
+  if (taskIndex >= currentTasks().length) { finish(false); return; }
+  if (taskIndex === 7 && currentTasks().length > 8) { startBreak(); return; }
+  renderTask();
+}
+function startBreak() {
+  clearInterval(timerId);
+  breakLeft = 3 * 60;
+  showScreen('break');
+  $('breakNum').textContent = fmt(breakLeft);
+  clearInterval(breakId);
+  breakId = setInterval(() => {
+    breakLeft--;
+    if (breakLeft < 0) breakLeft = 0;
+    $('breakNum').textContent = fmt(breakLeft);
+    if (breakLeft === 0) clearInterval(breakId);
+  }, 1000);
+}
+function endBreak() {
+  clearInterval(breakId);
+  showScreen('lesson');
+  clearInterval(timerId);
+  timerId = setInterval(() => {
+    timerLeft--;
+    if (timerLeft < 0) timerLeft = 0;
+    $('timer').textContent = fmt(timerLeft);
+    if (timerLeft === 0) { clearInterval(timerId); finish(true); }
+  }, 1000);
+  renderTask();
+}
+function finish(timeUp) {
+  clearInterval(timerId);
+  clearInterval(breakId);
+  saveProgress();
+  showScreen('finish');
+  const total = currentTasks().length;
+  const ratio = stars / total;
+  let em, verdict, quote, msg;
+  if (timeUp && taskIndex < total) {
+    em = '⏰'; verdict = 'Время вышло';
+    quote = '«Не всё успели — не страшно. Главное — думали».';
+    msg = `Прошли ${taskIndex} из ${total} карточек.`;
+  } else if (ratio >= 0.9) {
+    em = '🏆'; verdict = 'Всё получилось!';
+    quote = `«${studentName}, ты не квадратная голова — ты голова! Вот это по-нашему!»`;
+    msg = 'Почти всё верно. Дед гордится.';
+  } else if (ratio >= 0.7) {
+    em = '🎉'; verdict = 'Отлично поучились!';
+    quote = `«${studentName}, молодец. Голова варит. Где ошибся — разберём».`;
+    msg = 'Крепкий урок. Ошибки — не фигня, если их разобрать.';
+  } else {
+    em = '💪'; verdict = 'Потихоньку разберёмся';
+    quote = `«${studentName}, фигня — это когда сдался. А ты учился. Завтра разберём».`;
+    msg = 'Сегодня сложно — это нормально.';
+  }
+  $('finalEm').textContent = em;
+  $('finalScore').textContent = `Решено верно: ${stars} из ${total}`;
+  $('finalVerdict').textContent = verdict;
+  $('finalQuote').textContent = quote;
+  $('finalMsg').textContent = msg;
+}
+function goChoose() {
+  clearInterval(timerId);
+  clearInterval(breakId);
+  showScreen('choose');
+  renderLessonGrid();
+}
+function retryLesson() {
+  taskIndex = 0;
+  stars = 0;
+  timerLeft = 45 * 60;
+  showScreen('lesson');
+  renderTask();
+  clearInterval(timerId);
+  timerId = setInterval(() => {
+    timerLeft--;
+    if (timerLeft < 0) timerLeft = 0;
+    $('timer').textContent = fmt(timerLeft);
+    if (timerLeft === 0) { clearInterval(timerId); finish(true); }
+  }, 1000);
+  $('timer').textContent = fmt(timerLeft);
+}
+
+renderLessonGrid();
+$('nameInput').value = 'Сеня';
+studentName = 'Сеня';
+$('topWho').textContent = 'Сеня';
+</script>
+</body>
+</html>
